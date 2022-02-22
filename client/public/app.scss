@@ -1,0 +1,39 @@
+
+html {
+  font-size: 16px;
+  font-family: 'Roboto', sans-serif;
+}
+
+$colors: (
+        "blue": rgb(10, 132, 255),
+        "red": rgba(255, 69, 58),
+        "green": rgb(48, 209, 88),
+        "orange": rgb(255, 159, 10),
+);
+
+@each $key, $color in $colors {
+  .text-#{$key} {
+    color: $color;
+  }
+}
+
+// Scaffolding
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: center;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+}
+
+.v-sep {
+  height: 1px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+}

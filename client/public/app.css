@@ -1,0 +1,41 @@
+html {
+  font-size: 16px;
+  font-family: "Roboto", sans-serif;
+}
+
+.text-blue {
+  color: #0a84ff;
+}
+
+.text-red {
+  color: #ff453a;
+}
+
+.text-green {
+  color: #30d158;
+}
+
+.text-orange {
+  color: #ff9f0a;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: center;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+}
+
+.v-sep {
+  height: 1px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/*# sourceMappingURL=app.css.map */
