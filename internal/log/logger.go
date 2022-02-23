@@ -19,7 +19,7 @@ func printLn(line string) {
 }
 
 // Logf will attempt to format a log message or print plain text.
-func Logf(format string, args ...any) {
+func Logf(format string, args ...interface{}) {
 	// If debug tracing is enabled, the file and line number of a log function call will prefix the log message.
 	if os.Getenv("trace") == "true" {
 		// Get function caller
