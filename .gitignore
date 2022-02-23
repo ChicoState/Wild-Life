@@ -28,3 +28,5 @@ doc/api/
 *.key
 .env
 .DS_Store
+node_modules/
+dist/
