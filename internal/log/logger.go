@@ -12,12 +12,17 @@ import (
 const (
 	name       = "WildLife"
 	colorGreen = "\u001B[1;32m"
+	colorRed   = "\u001B[1;31m"
 	colorReset = "\u001B[m"
 )
 
 // printLn prints a formatted string to stdout
 func printLn(line string) {
 	fmt.Printf("%s[%s]%s %s%s\n", colorGreen, name, colorReset, line, colorReset)
+}
+
+func errorLn(line string) {
+	fmt.Fprintf(os.Stderr, "%s[Error]%s %s%s\n", colorRed, colorReset, line, colorReset)
 }
 
 // Logf will attempt to format a log message or print plain text.
@@ -33,6 +38,20 @@ func Logf(format string, args ...interface{}) {
 	}
 	// Print the log message
 	printLn(fmt.Sprintf(format, args...))
+}
+
+func Errf(format string, args ...interface{}) {
+	// If debug tracing is enabled, the file and line number of a log function call will prefix the log message.
+	if os.Getenv("trace") == "true" {
+		// Get function caller
+		_, _, ln, ok := runtime.Caller(1)
+		// Add the caller file and line number prefix
+		if ok {
+			fmt.Printf("%s[Error]%s:%d -> ", colorRed, colorReset, ln)
+		}
+	}
+	// Print the log message
+	errorLn(fmt.Sprintf(format, args...))
 }
 
 // Middleware provides an interface for logging http requests
