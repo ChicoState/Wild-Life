@@ -1,19 +1,34 @@
 package controller
 
 import (
+	"os"
 	"wildlife/internal/log"
-	model "wildlife/internal/server/model"
+	"wildlife/internal/server/model"
 )
 
 var (
-	user_cache map[string]*model.User
+	UserCache map[string]*model.User
 )
 
-func InitController() {
-	t_cache, err := model.LoadUsers()
-	if err != nil {
-		log.Errf("Error loading users: %s", err)
-		panic(err)
+func InitController() error {
+	// Check if we want to activate DB
+	if os.Getenv("DB_ACTIVE") == "true" {
+		// Initialize the database
+		err := model.InitDB()
+		if err != nil {
+			log.Errf("Error initializing database: %s", err)
+			return err
+		}
+
+		// Load users from DB
+		tCache, err := model.LoadUsers()
+		if err != nil {
+			return err
+		}
+		log.Logf("Loaded %d users from DB", len(*tCache))
+		// Cache the users
+		UserCache = *tCache
 	}
-	user_cache = *t_cache
+	// Load users
+	return nil
 }
