@@ -2,9 +2,11 @@ package log
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 const (
@@ -31,4 +33,21 @@ func Logf(format string, args ...interface{}) {
 	}
 	// Print the log message
 	printLn(fmt.Sprintf(format, args...))
+}
+
+// Middleware provides an interface for logging http requests
+func Middleware(next http.Handler) http.Handler {
+	// Create http Handler function
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		// Start timing the request
+		t1 := time.Now()
+		// Log after next.ServeHTTP exits
+		defer func() {
+			fmt.Printf("%s[%s]%s %s %s (%s) %s\n", colorGreen, r.Method, colorReset, r.RemoteAddr, r.URL.Path,
+				time.Since(t1), colorReset)
+		}()
+		// Serve request
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }
