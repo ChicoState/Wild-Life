@@ -5,6 +5,7 @@ import (
 	"os"
 	"wildlife/internal/log"
 	"wildlife/internal/server/controller"
+	"wildlife/internal/test"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -24,17 +25,26 @@ func Start() error {
 	router.Use(middleware.Heartbeat("/status"))
 	// Route requests to individual routers
 	router.Route("/upload", uploadRouter)
-	// Create a new http Server object
+
+	// Test database
+	if os.Getenv("TEST_USER_ARV") == "add" || os.Getenv("TEST_USER_ARV") == "remove" || os.Getenv("TEST_USER_ARV") == "all" {
+		test.TestDB()
+		// This test might mess with the already loaded users
+	}
 
 	// Test db add/remove
-	if os.Getenv("TEST_USER_AR_WEB") == "add" || os.Getenv("TEST_USER_AR_WEB") == "all" {
+	if os.Getenv("TEST_USER_ARV_WEB") == "add" || os.Getenv("TEST_USER_ARV_WEB") == "all" {
 		router.Get("/test/user/add", controller.TestDBAdd)
 	}
 
-	if os.Getenv("TEST_USER_AR_WEB") == "remove" || os.Getenv("TEST_USER_AR_WEB") == "all" {
+	if os.Getenv("TEST_USER_ARV_WEB") == "remove" || os.Getenv("TEST_USER_ARV_WEB") == "all" {
 		router.Get("/test/user/remove", controller.TestDBRemove)
 	}
+	if os.Getenv("TEST_USER_ARV_WEB") == "view" || os.Getenv("TEST_USER_ARV_WEB") == "all" {
+		router.Get("/test/user/view", controller.TestDBView)
+	}
 
+	// Create a new http Server object
 	srv := http.Server{
 		Addr:    ":3060",
 		Handler: router,

@@ -30,4 +30,4 @@ doc/api/
 .DS_Store
 node_modules/
 dist/
-wildlife
+wildlife         # Binary file
