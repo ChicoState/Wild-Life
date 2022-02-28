@@ -19,7 +19,7 @@ func Start() error {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
-	if os.Getenv("PROD") != "true" {
+	if os.Getenv("PRODUCTION") != "true" {
 		// Allow cross-origin requests
 		router.Use(cors)
 	}
