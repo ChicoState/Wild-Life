@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/joho/godotenv"
 	"wildlife/internal/log"
 	"wildlife/internal/server"
 	"wildlife/internal/server/controller"
-
-	"github.com/joho/godotenv"
 )
 
 const VERSION = "0.0.1"
