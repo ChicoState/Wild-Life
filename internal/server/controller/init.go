@@ -11,6 +11,11 @@ var (
 )
 
 func InitController() error {
+	if os.Getenv("PRODUCTION") == "true" {
+		log.Logf("Running in PRODUCTION mode.")
+	} else {
+		log.Logf("Running in DEVELOPMENT mode.")
+	}
 	// Check if we want to activate DB
 	if os.Getenv("DB_ACTIVE") == "true" {
 		// Initialize the database

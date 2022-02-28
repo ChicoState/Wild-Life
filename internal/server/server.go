@@ -19,6 +19,10 @@ func Start() error {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
+	if os.Getenv("PROD") != "true" {
+		// Allow cross-origin requests
+		router.Use(cors)
+	}
 	// Overwrite default logger with internal logger
 	router.Use(log.Middleware)
 	// Status middleware
@@ -55,4 +59,15 @@ func Start() error {
 		return err
 	}
 	return nil
+}
+
+// cors provides allows cross-origin requests, only in development mode
+func cors(next http.Handler) http.Handler {
+	// Create http Handler function
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		// Serve request
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
 }
