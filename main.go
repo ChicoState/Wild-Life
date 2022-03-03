@@ -16,7 +16,6 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Errf("Error loading .env file: %s", err)
-		return
 	}
 
 	// Initialize the controllers with the database
