@@ -1,19 +1,27 @@
 <script setup>
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
-import Upload from './components/Upload.vue'</script>
+import Upload from './components/Upload.vue'
+import Logo from './components/Logo.vue'</script>
 
 <template>
-  <Upload></Upload>
+  <div class="media">
+    <div class="container">
+      <div>
+        <Logo></Logo>
+      </div>
+      <div>
+        <Upload></Upload>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.media {
+  width: 100%;
+
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+
 }
 </style>
