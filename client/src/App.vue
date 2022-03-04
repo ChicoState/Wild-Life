@@ -1,6 +1,7 @@
 <script setup>
 import Upload from './components/Upload.vue'
-import Logo from './components/Logo.vue'</script>
+import Logo from './components/Logo.vue'
+</script>
 
 <template>
   <div class="media">
