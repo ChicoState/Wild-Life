@@ -1,5 +1,4 @@
 import {Buffer} from "buffer"
-import {fileType} from "./types"
 
 export function getBuffer(file: File) {
   return function(resolve){
@@ -22,13 +21,4 @@ export function getBuffer(file: File) {
 
 function encodeBase64(data: Uint8Array) {
    return Buffer.from(data).toString('base64');
-}
-
-export function displayFiles(files: fileType[]) {
-  const list = document.getElementById('list')
-  if(files != null){
-    files.forEach(element => {
-      list.innerHTML += '<li><div class="frame"><div class="thumbnail"><img class="thumbnail" src="data:'+element.type+';base64,'+element.data+'" alt='+element.name+'></div><div class="text"><h1>Test</h1><p>testing</p></div><div></li>'
-    });
-  }
 }

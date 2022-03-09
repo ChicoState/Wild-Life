@@ -1,7 +1,7 @@
 //store file info in db
 export const addFile = (fileInfo: any) => {
-    return new Promise(() => {
-        getDB().then(function(db: IDBDatabase) {
+    return new Promise((resolve, reject) => {
+        getDB().then(function (db: IDBDatabase) {
             const request = db.transaction(["files"], "readwrite")
                 .objectStore("files")
                 .add(fileInfo, fileInfo.id);
@@ -39,7 +39,7 @@ export const getAllFiles = () => {
             const store = tx.objectStore("files");
             request = store.getAll();
             request.onerror = (event) => {
-                console.log("Error: "+(event.target as any).errorCode)
+                console.log("Error: " + (event.target as any).errorCode)
             }
             request.onsuccess = () => {
                 return resolve(request.result);
@@ -49,7 +49,7 @@ export const getAllFiles = () => {
                 var db = request.result;
                 db.createObjectStore("files");
             }
-        });
+        })
     })
 }
 

@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import {reactive} from 'vue';
+import {inject, reactive} from 'vue';
 import {Upload} from '../rest.js';
-import {getAllFiles, addFile, clearFiles} from '../indexedDB'
-import {getBuffer,displayFiles} from '../upload'
+import {addFile, clearFiles, getAllFiles} from '../indexedDB'
+import {getBuffer} from '../upload'
 import type {fileType} from '../types'
 
 let files = []
+
+const cache = inject('cache')
 
 const data = reactive<{
   uploaded: fileType,
   response: any,
   imgs: any[]
-}>(
-  {
-    uploaded: null,
-    response: {},
-    imgs: []
-  }
-);
+}>({
+  uploaded: null,
+  response: {},
+  imgs: []
+});
 
 function uploadSucceeded(res) {
   data.response = res
@@ -30,7 +30,6 @@ function uploadFailed(error) {
 function uploadFile(event) {
 
   //erase placeholder
-  document.getElementById('placeholder').innerHTML = ''
   let upload = new Upload()
   let file: File = event.target.files[0]
   let temp_uploaded: fileType = {
@@ -43,67 +42,55 @@ function uploadFile(event) {
 
   upload.addFile(file)
 
-  upload.onsuccess = uploadSucceeded
-  upload.onfail = uploadFailed
-
   upload.submit()
-  
-  if(temp_uploaded.type != 'image/png' && temp_uploaded.type != 'image/jpeg'){
+
+  if (temp_uploaded.type != 'image/png' && temp_uploaded.type != 'image/jpeg') {
     alert('Only PNG and JPG files are allowed')
     return
-  }else{
+  } else {
     const today = new Date();
-    temp_uploaded.id = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate()+'+'+file.name;
+    temp_uploaded.id = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + '+' + file.name;
     temp_uploaded.name = file.name
     temp_uploaded.size = file.size
     var buf = new Promise(getBuffer(file))
-    buf.then(function(data:any){
+    buf.then(function (data: any) {
       temp_uploaded.data = data
       console.log(temp_uploaded)
       files.push(temp_uploaded)
       addFile(temp_uploaded)
-      displayFiles(files)
-      document.getElementById('placeholder').innerHTML = `<img style="max-width: 100%; max-height: 25rem; object-fit: contain;" class="frame" src="data:${temp_uploaded.type};base64,${temp_uploaded.data}" alt=${temp_uploaded.name} />`
-    }).catch(function(error){
-      console.log("Error: ",error)
+      cache.history.push({
+        image: `<img style="max-width: 100%; max-height: 25rem; object-fit: contain;" class="frame" src="data:${temp_uploaded.type};base64,${temp_uploaded.data}" alt=${temp_uploaded.name} />`
+      });
+    }).catch(function (error) {
+      console.log("Error: ", error)
     })
   }
 }
 
 window.onload = () => {
-  getAllFiles().then(function(result:any){
+  getAllFiles().then(function (result: any) {
     console.log(result)
     files = result
-    displayFiles(files)
   })
 }
 
 function clearCache() {
   files = []
   data.imgs = []
-  document.getElementById('placeholder').innerHTML = ''
   clearFiles()
 }
 
 </script>
 
 <template>
-  <div class="container">
-    <h2>Upload Images</h2>
-    <div>
+  <div class="d-flex flex-column">
+    <div class="d-flex flex-column">
+      <h2>Upload Images</h2>
       <label class="custom-file-upload button">
         <input id="upload" accept="image/png,image/jpeg" class="button" type="file" @change="uploadFile">
         <i class="fa fa-cloud-upload"></i> Select File
       </label>
-      {{ data.response }}
-      
-      <div id="placeholder"></div>
-      <span class="previous" >Previous Uploads</span><a href="" class="clear_btn" @click="clearCache">clear</a>
-      <div>
-        <div v-for="item in data.imgs">
-          {{item}}
-        </div>
-      </div>
+      {{ data }}
     </div>
   </div>
 </template>
@@ -123,32 +110,37 @@ input[type="file"] {
   object-fit: contain;
   flex-basis: 40%;
 }
+
 .frame {
   background-color: rgb(44, 44, 46);
   border-radius: 5px;
   padding: 5px;
   margin: 5px;
   display: flex;
-  align-items: flex-end;
-  align-content: flex-end;
+  align-items: center;
   justify-content: center;
 }
+
 .text {
   padding-left: 20px;
 }
-.container {
+
+#container {
   justify-content: center;
 }
+
 /* keep left justified */
 #placeholder {
   height: 25rem;
 }
+
 /* keep right justified */
 .clear_btn {
   float: right;
   color: rgb(108, 194, 2);
   text-decoration: none;
 }
+
 .previous {
   font-size: 24px;
   font-weight: bold;
