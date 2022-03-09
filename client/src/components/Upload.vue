@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import {reactive} from 'vue';
-import {Buffer} from "buffer";
 import {Upload} from '../rest.js';
 import {getAllFiles, addFile, clearFiles} from '../indexedDB'
+import {getBuffer,displayFiles} from '../upload'
+import type {fileType} from '../types'
 
 let files = []
 
-const data = reactive({
-  uploaded: {
-    status: 0,
-    id : '',
-    name : '',
-    size : 0,
-    path : '',
-    type : '',
-    data : null,
-  },
-  response: {}
-});
+const data = reactive<{
+  uploaded: fileType,
+  response: any,
+  imgs: any[]
+}>(
+  {
+    uploaded: null,
+    response: {},
+    imgs: []
+  }
+);
 
 function uploadSucceeded(res) {
   data.response = res
@@ -32,15 +32,13 @@ function uploadFile(event) {
   //erase placeholder
   document.getElementById('placeholder').innerHTML = ''
   let upload = new Upload()
-  let file = event.target.files[0]
-  let temp_uploaded = {
-    status: 0,
-    id : '',
-    name : '',
-    size : 0,
-    path : '',
-    type : '',
-    data : null,
+  let file: File = event.target.files[0]
+  let temp_uploaded: fileType = {
+    name: "",
+    size: 0,
+    type: file.type,
+    id: "",
+    data: null
   }
 
   upload.addFile(file)
@@ -49,8 +47,6 @@ function uploadFile(event) {
   upload.onfail = uploadFailed
 
   upload.submit()
-
-  temp_uploaded.type = file.type
   
   if(temp_uploaded.type != 'image/png' && temp_uploaded.type != 'image/jpeg'){
     alert('Only PNG and JPG files are allowed')
@@ -61,12 +57,12 @@ function uploadFile(event) {
     temp_uploaded.name = file.name
     temp_uploaded.size = file.size
     var buf = new Promise(getBuffer(file))
-    buf.then(function(data){
+    buf.then(function(data:any){
       temp_uploaded.data = data
       console.log(temp_uploaded)
       files.push(temp_uploaded)
       addFile(temp_uploaded)
-      displayFiles()
+      displayFiles(files)
       document.getElementById('placeholder').innerHTML = `<img style="max-width: 100%; max-height: 25rem; object-fit: contain;" class="frame" src="data:${temp_uploaded.type};base64,${temp_uploaded.data}" alt=${temp_uploaded.name} />`
     }).catch(function(error){
       console.log("Error: ",error)
@@ -74,58 +70,25 @@ function uploadFile(event) {
   }
 }
 
-function getBuffer(file) {
-  return function(resolve){
-    var reader = new FileReader();
-    reader.readAsArrayBuffer(file);
-    reader.onload = function() {
-      var arrayBuffer = reader.result;
-      var bytes: any
-      if(typeof arrayBuffer === 'string') {
-        bytes = new Uint8Array(arrayBuffer.length);
-      } else {
-        var raw = new Uint8Array(arrayBuffer);
-        // var decoeder = new TextDecoder('utf-8');
-        bytes = encodeBase64(raw);
-      }
-      resolve(bytes);
-    }
-  }
-}
-
-function encodeBase64(data) {
-  return Buffer.from(data).toString('base64');
-}
-
-function displayFiles() {
-  const list = document.getElementById('list')
-  if(files != null){
-    files.forEach(element => {
-      // <img width="25%" src={`data:${IFPipe.type};base64,${IFPipe.data}`} alt={IFPipe.name} />
-      list.innerHTML += '<li><div class="frame"><div class="thumbnail"><img class="thumbnail" src="data:'+element.type+';base64,'+element.data+'" alt='+element.name+'></div><div class="text"><h1>Test</h1><p>testing</p></div><div></li>'
-    });
-  }
-}
-
 window.onload = () => {
   getAllFiles().then(function(result:any){
     console.log(result)
     files = result
-    displayFiles()
+    displayFiles(files)
   })
 }
 
 function clearCache() {
   files = []
+  data.imgs = []
   document.getElementById('placeholder').innerHTML = ''
-  document.getElementById('list').innerHTML = ''
   clearFiles()
 }
 
 </script>
 
 <template>
-  <div id="container">
+  <div class="container">
     <h2>Upload Images</h2>
     <div>
       <label class="custom-file-upload button">
@@ -136,7 +99,11 @@ function clearCache() {
       
       <div id="placeholder"></div>
       <span class="previous" >Previous Uploads</span><a href="" class="clear_btn" @click="clearCache">clear</a>
-      <ul id="list"></ul>
+      <div>
+        <div v-for="item in data.imgs">
+          {{item}}
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -162,13 +129,14 @@ input[type="file"] {
   padding: 5px;
   margin: 5px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  align-content: flex-end;
   justify-content: center;
 }
 .text {
   padding-left: 20px;
 }
-#container {
+.container {
   justify-content: center;
 }
 /* keep left justified */

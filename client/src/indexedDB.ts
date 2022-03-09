@@ -1,5 +1,5 @@
 //store file info in db
-export const addFile = (fileInfo) => {
+export const addFile = (fileInfo: any) => {
     return new Promise(() => {
         getDB().then(function(db: IDBDatabase) {
             const request = db.transaction(["files"], "readwrite")
@@ -15,8 +15,8 @@ export const addFile = (fileInfo) => {
     })
 }
 
-export const getFile = (fileID) => {
-    return new Promise((resolve) => {
+export const getFile = (fileID: string) => {
+    return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
             const tx = db.transaction(["files"], "readonly");
             const store = tx.objectStore("files");
@@ -32,7 +32,7 @@ export const getFile = (fileID) => {
 }
 
 export const getAllFiles = () => {
-    return new Promise((resolve) => {
+    return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
             var request: any
             const tx = db.transaction("files", "readonly");
@@ -54,8 +54,8 @@ export const getAllFiles = () => {
 }
 
 //delete file info from db
-export const rmFile = (fileID) => {
-    return new Promise((resolve) => {
+export const rmFile = (fileID: string) => {
+    return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
             const tx = db.transaction("files", "readwrite");
             const store = tx.objectStore("files");
@@ -71,7 +71,7 @@ export const rmFile = (fileID) => {
 }
 
 export const clearFiles = () => {
-    return new Promise((resolve) => {
+    return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
             const tx = db.transaction("files", "readwrite");
             const store = tx.objectStore("files");
