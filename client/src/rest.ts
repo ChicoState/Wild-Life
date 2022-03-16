@@ -2,6 +2,9 @@ import axios from 'axios'
 
 export class Upload {
 
+    onsuccess(data) {}
+    onfail(error) {}
+    form: FormData;
 
     constructor() {
         this.form = new FormData();

@@ -2,7 +2,7 @@
 
 import {inject} from "vue";
 
-const cache = inject('cache')
+const cache:any = inject('cache')
 
 function clear() {
   cache.history = []
@@ -42,4 +42,11 @@ function clear() {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
 }
+
+.clear_btn {
+  float: right;
+  color: rgb(108, 194, 2);
+  text-decoration: none;
+}
+
 </style>

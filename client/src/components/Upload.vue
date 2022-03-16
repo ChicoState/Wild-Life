@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {inject, reactive} from 'vue';
-import {Upload} from '../rest.js';
+import {Upload} from '../rest';
 import {addFile, clearFiles, getAllFiles} from '../indexedDB'
 import {getBuffer} from '../upload'
 import type {fileType} from '../types'
 
 let files = []
 
-const cache = inject('cache')
+const cache:any = inject('cache')
 
 const data = reactive<{
   uploaded: fileType,
@@ -101,48 +101,4 @@ input[type="file"] {
   display: none;
 }
 
-</style>
-
-<style>
-.thumbnail {
-  max-width: 10vw;
-  max-height: 10vh;
-  object-fit: contain;
-  flex-basis: 40%;
-}
-
-.frame {
-  background-color: rgb(44, 44, 46);
-  border-radius: 5px;
-  padding: 5px;
-  margin: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.text {
-  padding-left: 20px;
-}
-
-#container {
-  justify-content: center;
-}
-
-/* keep left justified */
-#placeholder {
-  height: 25rem;
-}
-
-/* keep right justified */
-.clear_btn {
-  float: right;
-  color: rgb(108, 194, 2);
-  text-decoration: none;
-}
-
-.previous {
-  font-size: 24px;
-  font-weight: bold;
-}
 </style>
