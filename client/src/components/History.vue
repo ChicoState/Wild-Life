@@ -1,12 +1,26 @@
 <script lang="ts" setup>
 
-import {inject} from "vue";
+import {inject, onMounted} from "vue";
+import {clearFiles, getAllFiles} from '../indexedDB';
 
 const cache:any = inject('cache')
 
 function clear() {
   cache.history = []
+  clearFiles()
 }
+
+onMounted(() => {
+  // Load images from indexedDB into cache
+  getAllFiles().then(function (result: any) {
+    console.log(result)
+    result.forEach(file => {
+      cache.history.push({
+          image: `<img style="max-width: 100%; max-height: 25rem; object-fit: contain;" class="frame" src="data:${file.type};base64,${file.data}" alt=${file.name} />`
+      })
+    });
+  })
+})
 
 </script>
 

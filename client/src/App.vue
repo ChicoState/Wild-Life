@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import Upload from './components/Upload.vue'
 import Logo from './components/Logo.vue'
 import History from "./components/History.vue";

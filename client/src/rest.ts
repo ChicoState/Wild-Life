@@ -11,6 +11,7 @@ export class Upload {
         this.onsuccess = (data) => {
         }
         this.onfail = (error) => {
+            console.log(error)
         }
     }
 
@@ -19,6 +20,7 @@ export class Upload {
     }
 
     submit() {
+        console.log("Uploading...")
         const headers = {'Content-Type': 'multipart/form-data'};
         const request = axios.post('http://localhost:5069/upload', this.form, {headers})
         request.then(this.onsuccess).catch(this.onfail)

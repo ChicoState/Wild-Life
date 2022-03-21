@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import {inject, reactive} from 'vue';
 import {Upload} from '../rest';
-import {addFile, clearFiles, getAllFiles} from '../indexedDB'
+import {addFile} from '../indexedDB'
 import {getBuffer} from '../upload'
 import type {fileType} from '../types'
-
-let files = []
 
 const cache:any = inject('cache')
 
@@ -18,14 +16,6 @@ const data = reactive<{
   response: {},
   imgs: []
 });
-
-function uploadSucceeded(res) {
-  data.response = res
-}
-
-function uploadFailed(error) {
-  data.response = error
-}
 
 function uploadFile(event) {
 
@@ -43,7 +33,6 @@ function uploadFile(event) {
   upload.addFile(file)
 
   upload.submit()
-
   if (temp_uploaded.type != 'image/png' && temp_uploaded.type != 'image/jpeg') {
     alert('Only PNG and JPG files are allowed')
     return
@@ -56,7 +45,6 @@ function uploadFile(event) {
     buf.then(function (data: any) {
       temp_uploaded.data = data
       console.log(temp_uploaded)
-      files.push(temp_uploaded)
       addFile(temp_uploaded)
       cache.history.push({
         image: `<img style="max-width: 100%; max-height: 25rem; object-fit: contain;" class="frame" src="data:${temp_uploaded.type};base64,${temp_uploaded.data}" alt=${temp_uploaded.name} />`
@@ -65,19 +53,6 @@ function uploadFile(event) {
       console.log("Error: ", error)
     })
   }
-}
-
-window.onload = () => {
-  getAllFiles().then(function (result: any) {
-    console.log(result)
-    files = result
-  })
-}
-
-function clearCache() {
-  files = []
-  data.imgs = []
-  clearFiles()
 }
 
 </script>
