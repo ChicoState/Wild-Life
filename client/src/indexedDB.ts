@@ -15,6 +15,7 @@ export const addFile = (fileInfo: any) => {
     })
 }
 
+// gets a file by id from indexedDB
 export const getFile = (fileID: string) => {
     return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
@@ -31,6 +32,7 @@ export const getFile = (fileID: string) => {
     })
 }
 
+// gets all files from indexedDB
 export const getAllFiles = () => {
     return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
@@ -38,7 +40,7 @@ export const getAllFiles = () => {
             const tx = db.transaction("files", "readonly");
             const store = tx.objectStore("files");
             request = store.getAll();
-            request.onerror = (event) => {
+            request.onerror = (event:any) => {
                 console.log("Error: " + (event.target as any).errorCode)
             }
             request.onsuccess = () => {
@@ -70,6 +72,7 @@ export const rmFile = (fileID: string) => {
     })
 }
 
+// delete all files from db
 export const clearFiles = () => {
     return new Promise((resolve: any) => {
         getDB().then(function(db: IDBDatabase) {
@@ -86,6 +89,7 @@ export const clearFiles = () => {
     })
 }
 
+// get indexedDB db
 export const getDB = () => {return new Promise((resolve: (value: IDBDatabase) => void) => {
         var request = indexedDB.open("file-upload", 1);
         request.onsuccess = (e) => {

@@ -2,8 +2,8 @@ import axios from 'axios'
 
 export class Upload {
 
-    onsuccess(data) {}
-    onfail(error) {}
+    onsuccess(data:any) {}
+    onfail(error:any) {}
     form: FormData;
 
     constructor() {
@@ -15,7 +15,7 @@ export class Upload {
         }
     }
 
-    addFile(file) {
+    addFile(file: File) {
         this.form.append("file", file)
     }
 

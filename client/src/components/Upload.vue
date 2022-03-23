@@ -12,12 +12,18 @@ const data = reactive<{
   response: any,
   imgs: any[]
 }>({
-  uploaded: null,
+  uploaded: {
+    id: '',
+    name: '',
+    type: '',
+    size: 0,
+    data: '',
+  },
   response: {},
   imgs: []
 });
 
-function uploadFile(event) {
+function uploadFile(event: any) {
 
   //erase placeholder
   let upload = new Upload()
@@ -27,7 +33,7 @@ function uploadFile(event) {
     size: 0,
     type: file.type,
     id: "",
-    data: null
+    data: ""
   }
 
   upload.addFile(file)
