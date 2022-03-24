@@ -9,11 +9,13 @@ const data = reactive({
     size: 0,
     name: 0,
   },
+  img: "",
   response: {}
 });
 
 function uploadSucceeded(res) {
   data.response = res
+  data.img = res.data.data.token
 }
 
 function uploadFailed(error) {
@@ -42,7 +44,10 @@ function uploadFile(event) {
         <input id="upload" accept="image/png,image/jpg" class="button" type="file" @change="uploadFile">
         <i class="fa fa-cloud-upload"></i> Select File
       </label>
-      {{ data.response }}
+      <div v-if="data.img !== ''">
+        <img :src="`data:image/png;base64,${data.img}`" alt="img" style="width: 75%; padding: 1rem;"/>
+      </div>
+
     </div>
   </div>
 </template>
