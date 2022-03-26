@@ -18,7 +18,14 @@ onMounted(() => {
     console.log(result)
     result.forEach((file:fileType) => {
       cache.history.push({
-          image: `<img style="max-width: 100%; max-height: 25rem; object-fit: contain;" class="frame" src="data:${file.type};base64,${file.data}" alt=${file.name} />`
+          image: `<div class = "row">
+          <div class = "col"><img style="max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 0.5rem;" class="frame" src="data:${file.type};base64,${file.data}" alt=${file.name} /></div>
+          <div class = "col" style = "line-height: 1px; font-size:90%; text-align:center">
+            <h2 style = "color: rgba(255, 255, 255, 0.8);"><i style = "color: yellow;" class="fa-solid fa-triangle-exclamation"></i> Possible Irritants</h2>
+            <h4 style = "color: rgba(255, 255, 255, 0.8);"><i style = "text-align:right; " class="fa-solid fa-magnifying-glass"></i>    ${file.plant}</h4>
+            <h4 style = "color: rgba(255,255,255,0.4);"> ${file.confidence} confidence </h4>
+          </div> 
+          </div>`
       })
     });
   })
@@ -33,7 +40,7 @@ onMounted(() => {
       <a class="clear_btn" href="#" @click="clear">clear</a>
     </div>
     <div class="image-grid">
-      <div v-for="img in cache.history" class="image">
+      <div v-for="img in cache.history" class="image"> 
         <div v-html="img.image"></div>
       </div>
     </div>
@@ -42,20 +49,18 @@ onMounted(() => {
 
 <style scoped>
 .image {
-  width: 100%;
-  height: 8rem;
-  aspect-ratio: 3/4;
+
   border-radius: 0.5rem;
   padding: 0.5rem;
   background-color: rgba(44, 44, 46, 1);
-  color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.05);
+ text-align:left;
 }
 
 .image-grid {
   display: grid;
   align-items: center;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 1rem;
 }
 
