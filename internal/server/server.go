@@ -48,12 +48,17 @@ func Start() error {
 		router.Get("/test/user/view", controller.TestDBView)
 	}
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3060"
+	}
+
 	// Create a new http Server object
 	srv := http.Server{
-		Addr:    ":3060",
+		Addr:    ":" + port,
 		Handler: router,
 	}
-	log.Logf("Starting server on port localhost:3060")
+	log.Logf("Starting server on port localhost:%s", port)
 	// Start hosting the server
 	if err := srv.ListenAndServe(); err != nil {
 		return err

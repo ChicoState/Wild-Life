@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"gocv.io/x/gocv"
+	gocv "gocv.io/x/gocv"
 	"image"
 	"image/color"
 	"math/rand"
@@ -60,7 +60,6 @@ func uploadFile(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		return
 	}
-
 	// Populate the file response struct
 	fileResponse := FileResponse{
 		Name:  m.Filename,

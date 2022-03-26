@@ -64,4 +64,13 @@ body {
   background-color: rgba(0, 0, 0, 0.2);
 }
 
+/*Displays desktop by default*/
+#content-desktop {display: block;}
+#content-mobile {display: none;}
+/*Displays mobile id's only when max pixel width is at or below 800, around the size of medium tablets*/
+@media screen and (max-width: 768px) {
+
+#content-desktop {display: none;}
+#content-mobile {display: block;}
+}
 /*# sourceMappingURL=app.css.map */
