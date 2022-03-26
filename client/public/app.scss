@@ -71,3 +71,10 @@ $colors: (
   width: 100%;
   background-color: rgba(0, 0, 0, 0.2);
 }
+
+/* keep right justified */
+.clear_btn {
+  float: right;
+  color: rgb(108, 194, 2);
+  text-decoration: none;
+}
