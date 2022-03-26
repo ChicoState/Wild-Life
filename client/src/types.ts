@@ -5,4 +5,6 @@ export interface fileType{
    size: number;
    data: string;
    status?: number;
+   plant?: string;
+   confidence?: number;
 }
