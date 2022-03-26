@@ -18,6 +18,11 @@ type FileResponse struct {
 	Name string `json:"name"`
 	Size int    `json:"size"`
 	Type string `json:"type"`
+	Size int    `json:"size"`
+	Data []byte `json:"data"`
+	Status int64 `json:"status"`
+	Plant string `json:"plant"`
+	Confidence float64 `json:"confidence"`
 }
 
 // uploadFile accepts http request containing a multipart file form
