@@ -6,10 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	gocv "gocv.io/x/gocv"
+	"gocv.io/x/gocv"
 	"image"
 	"image/color"
-	"math/rand"
 	"net/http"
 )
 
@@ -90,73 +89,54 @@ func uploadFile(writer http.ResponseWriter, request *http.Request) {
 }
 
 func Process(buffer []byte) (string, error) {
-
-	cascade := gocv.NewCascadeClassifier()
-	cascade.Load("haarcascade_frontalface_default.xml")
-
-	eyeRight := gocv.NewCascadeClassifier()
-	eyeRight.Load("haarcascade_righteye_2splits.xml")
-
-	eyeLeft := gocv.NewCascadeClassifier()
-	eyeLeft.Load("haarcascade_lefteye_2splits.xml")
-
+	// Read the buffer in
 	img, err := gocv.IMDecode(buffer, gocv.IMReadAnyColor)
+	// Close the image when the function exits
+	defer img.Close()
 	if err != nil {
 		fmt.Printf("Error opening image buffer\n")
 		return "", nil
 	}
-
+	// Convert the image to Greyscale
 	imgGrey := gocv.NewMat()
+	// Close the image when the function exits
+	defer imgGrey.Close()
+	// Blur the image so we have more unified borders.
+	gocv.GaussianBlur(img, &imgGrey, image.Point{}, 40, 40, gocv.BorderDefault)
+	// Convert blued image to black and white
+	gocv.CvtColor(imgGrey, &imgGrey, gocv.ColorBGRToGray)
+	// Take the threshold
+	imgThresh := gocv.NewMat()
+	// Close the image when the function exits
+	defer imgThresh.Close()
+	gocv.Threshold(imgGrey, &imgThresh, 60, 255, gocv.ThresholdOtsu|gocv.ThresholdToZero)
+	// Find contours
+	pv := gocv.FindContours(imgThresh, gocv.RetrievalExternal, gocv.ChainApproxNone)
+	// Prepare an image to return
 
-	gocv.CvtColor(img, &imgGrey, gocv.ColorBGRToGray)
+	imgOut := gocv.NewMat()
+	// Close the image when the function exits
+	// Convert to black and white
+	imgGreyNew := gocv.NewMat()
+	gocv.CvtColor(img, &imgGreyNew, gocv.ColorBGRToGray)
+	gocv.BitwiseAnd(imgGreyNew, imgThresh, &imgOut)
+	// Convert back to an RGB color space
+	gocv.CvtColor(imgOut, &imgOut, gocv.ColorGrayToBGR)
+	// Draw the contours (Black background with green outlines)
 
-	faces := cascade.DetectMultiScale(imgGrey)
-	for _, face := range faces {
-		// First Pass Face
-		gocv.Ellipse(&img, face.Min.Add(face.Size().Div(2)), face.Size().Div(2), 180,
-			0, 360, color.RGBA{
-				R: 128,
-				G: 128,
-				B: 128,
-				A: 128,
-			}, 2)
-		f := face
-		// Nested faces
-		faceImg := imgGrey.Region(f)
-		for i := 0; i < 20; i++ {
-			f = face.Inset(-(20 - i))
-			faceImg = imgGrey.Region(f.Add(image.Pt(20-rand.Int()%40, 20-rand.Int()%40)))
-			nestedFaces := cascade.DetectMultiScale(faceImg)
-			if len(nestedFaces) < 1 {
-				continue
-			}
-			// The first nested face
-			nestedFace := nestedFaces[0]
-			// The main nested face
-			gocv.Ellipse(&img, f.Min.Add(nestedFace.Min).Add(nestedFace.Size().Div(2)), nestedFace.Size().Div(2), 180,
-				0, 360,
-				color.RGBA{
-					R: uint8(i % 255),
-					G: 64,
-					B: 128,
-					A: 255,
-				}, 1)
-			// Confirmed face
-		}
-
-	}
-
-	encoded, err := gocv.IMEncode(".jpg", img)
+	gocv.DrawContours(&imgOut, pv, -1, color.RGBA{R: 60, B: 80, G: 180, A: 128}, 8)
+	// Encode the matrix into an image format
+	gocv.Normalize(imgOut, &imgOut, 0, 255, gocv.NormMinMax)
+	encoded, err := gocv.IMEncode(".jpg", imgOut)
 	if err != nil {
 		return "", err
 	}
-
+	// Close the image when the function exits
+	defer encoded.Close()
+	// Allocate a response buffer
 	buf := make([]byte, base64.StdEncoding.EncodedLen(len(encoded.GetBytes())))
-
+	// Encode the result matrix to the user
 	base64.StdEncoding.Encode(buf, encoded.GetBytes())
-
-	defer img.Close()
-
 	return string(buf), nil
 
 }

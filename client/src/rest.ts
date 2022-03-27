@@ -8,11 +8,7 @@ export class Upload {
 
     constructor() {
         this.form = new FormData();
-        this.onsuccess = (data) => {
-        }
-        this.onfail = (error) => {
-            console.log(error)
-        }
+
     }
 
     addFile(file: File) {
@@ -22,8 +18,7 @@ export class Upload {
     submit() {
         console.log("Uploading...")
         const headers = {'Content-Type': 'multipart/form-data'};
-        const request = axios.post('http://localhost:5069/upload', this.form, {headers})
-        request.then(this.onsuccess).catch(this.onfail)
+        return axios.post('http://localhost:5069/upload', this.form, {headers})
     }
 
 
