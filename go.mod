@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.4.0
 	gocv.io/x/gocv v0.30.0
 	gorm.io/driver/mysql v1.3.2

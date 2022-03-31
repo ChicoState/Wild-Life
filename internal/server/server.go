@@ -29,6 +29,7 @@ func Start() error {
 	router.Use(middleware.Heartbeat("/status"))
 	// Route requests to individual routers
 	router.Route("/upload", uploadRouter)
+	router.Route("/sockets", socketRouter)
 
 	// Test database
 	if os.Getenv("TEST_USER_ARV") == "add" || os.Getenv("TEST_USER_ARV") == "remove" || os.Getenv("TEST_USER_ARV") == "all" {
