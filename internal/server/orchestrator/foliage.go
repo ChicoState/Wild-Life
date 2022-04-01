@@ -130,9 +130,22 @@ func Process(buffer []byte, c chan Update) error {
 	imgGreyNew := gocv.NewMat()
 	gocv.CvtColor(img, &imgGreyNew, gocv.ColorBGRToGray)
 	gocv.BitwiseAnd(imgGreyNew, imgThresh, &imgOut)
+
 	// Convert back to an RGB color space
 	gocv.CvtColor(imgOut, &imgOut, gocv.ColorGrayToBGR)
-	// Draw the contours (Black background with green outlines)
+
+	classifier := gocv.NewCascadeClassifier()
+	classifier.Load("./poisonOakCascade.xml")
+	rects := classifier.DetectMultiScale(imgOut)
+	for _, res := range rects {
+		gocv.Rectangle(&img, res, color.RGBA{
+			R: 180,
+			G: 60,
+			B: 80,
+			A: 255,
+		}, 4)
+	}
+
 	gocv.DrawContours(&imgOut, pv, -1, color.RGBA{R: 60, B: 80, G: 180, A: 128}, 8)
 	// Encode the matrix into an image format
 	gocv.Normalize(imgOut, &imgOut, 0, 255, gocv.NormMinMax)
@@ -144,6 +157,17 @@ func Process(buffer []byte, c chan Update) error {
 		Message: "threshold generated",
 		Data:    bufThreshold,
 	}
+
+	bufResults := MatToBase64(img)
+	// Send the thumbnail to the user
+	c <- Update{
+		Time:    time.Now(),
+		State:   "results",
+		Message: "results generated",
+		Data:    bufResults,
+	}
+	// Draw the contours (Black background with green outlines)
+
 	return nil
 
 }

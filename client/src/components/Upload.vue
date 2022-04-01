@@ -30,6 +30,7 @@ const state = reactive<{
     thumbnail: "",
     threshold: "",
     highlight: "",
+    results: "",
     progress: [] as UploadState[],
     token: "",
     resolve: {}
@@ -61,6 +62,10 @@ function updateStatus(up: UploadState) {
       state.response.highlight = up.data
       state.context = true
       break
+    case "results":
+      state.response.results = up.data
+      state.context = true
+      break
   }
 }
 
@@ -69,6 +74,7 @@ function reset() {
     thumbnail: "",
     threshold: "",
     highlight: "",
+    results: "",
     progress: [] as UploadState[],
     token: "",
   }
@@ -157,6 +163,15 @@ function uploadFile(event: any) {
                class="preview-upload">
             <div>Highlight</div>
             <div v-if="state.response.highlight === ''"
+                 class="d-flex justify-content-center align-items-center align-content-center flex-column gap-1"
+                 style="height: 100%;">Computing
+              <Loading></Loading>
+            </div>
+          </div>
+          <div :style="`background-image: url('data:image/jpg;base64,${state.response.results}');`"
+               class="preview-upload">
+            <div>Results</div>
+            <div v-if="state.response.results === ''"
                  class="d-flex justify-content-center align-items-center align-content-center flex-column gap-1"
                  style="height: 100%;">Computing
               <Loading></Loading>
