@@ -38,6 +38,23 @@ $colors: (
   }
 }
 
+@for $i from 0 to 5 {
+  $loop-size: $i * 0.1rem + 0.5rem;
+  .label-c#{$i} {
+    font-size: $loop-size;
+  }
+  $loop-opacity: $i * 0.2;
+  .label-o#{$i} {
+    opacity: $loop-opacity;
+  }
+}
+
+.overflow-ellipse {
+  overflow: clip;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 1rem);
+}
+
 // Scaffolding
 
 .button {

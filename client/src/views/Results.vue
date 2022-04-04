@@ -56,7 +56,7 @@ let state = reactive({
       </div>
       <div class="sidebar">
         <div class="subtitle">Processing</div>
-        <div v-for="(state,i) in props.response.progress" class="pair">
+        <div v-for="(state) in props.response.progress" class="pair">
           <div class="key-pair">{{ state.state }}</div>
           <div class="value-pair">done</div>
         </div>

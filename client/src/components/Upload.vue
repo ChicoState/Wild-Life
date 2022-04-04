@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import {reactive} from 'vue';
+import {inject, reactive} from 'vue';
 import {Upload, UploadState} from '../rest';
-import {addFile, getAllFiles} from '../indexedDB'
-import {getBuffer} from '../upload'
 import type {fileType} from '../types'
 import Results from "../views/Results.vue";
 
@@ -27,12 +25,19 @@ let state = reactive<{
 });
 
 
+let cache: any = inject('cache')
+
 function updateStatus(up: UploadState) {
   state.response.progress.push(up)
   switch (up.state) {
     case "thumbnail":
       state.response.thumbnail = up.data
       state.context = true
+      cache.history.push({
+        data: up.data,
+        name: state.response.name,
+        type: state.response.type,
+      })
       break
     case "threshold":
       state.response.threshold = up.data
@@ -83,34 +88,32 @@ function uploadFile(event: any) {
     const today = new Date();
     temp_uploaded.id = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + '+' + file.name;
     // Load images from indexedDB into cache to prevent double image insertion
-    getAllFiles().then(function (result: any) {
-      result.forEach((file: fileType) => {
-        if (temp_uploaded.id == file.id) {
-          //Reload to stop image from showing up until page refresh
-          return
-        }
-      });
-    })
-
+    // getAllFiles().then(function (result: any) {
+    //   result.forEach((file: fileType) => {
+    //     if (temp_uploaded.id == file.id) {
+    //       //Reload to stop image from showing up until page refresh
+    //       return
+    //     }
+    //   });
+  }
 
     state.upload = new Upload()
 
-    state.upload.addFile(file)
-    state.upload.submit()
-    state.response.name = file.name
-    state.response.type = file.type
-    state.response.size = file.size
-    state.upload.update = updateStatus
+  state.upload.addFile(file)
+  state.upload.submit()
+  state.response.name = file.name
+  state.response.type = file.type
+  state.response.size = file.size
+  state.upload.update = updateStatus
 
-    let buf = new Promise(getBuffer(file))
+  // let buf = new Promise(getBuffer(file))
 
-    buf.then(function (data: any) {
-      temp_uploaded.data = data
-      addFile(temp_uploaded)
-    }).catch(function (error) {
-      console.log("Error: ", error)
-    })
-  }
+  // buf.then(function (data: any) {
+  //   temp_uploaded.data = data
+  //   addFile(temp_uploaded)
+  // }).catch(function (error) {
+  //   console.log("Error: ", error)
+  // })
 }
 
 

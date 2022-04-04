@@ -9,11 +9,11 @@ import (
 var orch *Orchestrator
 
 func init() {
-	c := make(chan Request, 8)
-	done := make(chan Request, 16)
+	receiver := make(chan Request, 8)
+	resolver := make(chan Request, 16)
 	orch = &Orchestrator{
-		channel:  c,
-		done:     done,
+		receiver: receiver,
+		resolver: resolver,
 		resolved: map[string]Request{},
 		latest:   map[string]chan Update{},
 	}
@@ -37,8 +37,8 @@ type Request interface {
 }
 
 type Orchestrator struct {
-	channel  chan Request
-	done     chan Request
+	receiver chan Request
+	resolver chan Request
 	resolved map[string]Request
 	latest   map[string]chan Update
 }
@@ -80,13 +80,19 @@ func Connect(key string) (chan Update, error) {
 func (o *Orchestrator) enroll(req Request) error {
 	rx := make(chan Update, 8)
 	orch.latest[req.Key()] = rx
-	o.channel <- req
+	o.receiver <- req
 	o.update(req, "queued")
 	return nil
 }
 
+func (o *Orchestrator) complete(request Request) error {
+	o.resolver <- request
+	return nil
+}
+
+// resolve handles all completed requests, should be started on init
 func (o *Orchestrator) resolve() error {
-	for done := range o.done {
+	for done := range o.resolver {
 		o.resolved[done.Key()] = done
 		o.update(done, "complete")
 		o.closeRequest(done)
@@ -94,9 +100,9 @@ func (o *Orchestrator) resolve() error {
 	return nil
 }
 
+// Job requests sent to the receiver channel are handled here, should be started on init
 func (o *Orchestrator) receive() error {
-
-	for request := range o.channel {
+	for request := range o.receiver {
 		o.update(request, "running")
 		update := o.latest[request.Key()]
 		err := request.Run(update)
@@ -105,7 +111,7 @@ func (o *Orchestrator) receive() error {
 			log.Errf("Orchestrator error: %s", err)
 			continue
 		}
-		o.done <- request
+
 	}
 	return nil
 }

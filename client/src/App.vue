@@ -1,14 +1,32 @@
 <script setup lang="ts">
 import Logo from "@/components/Logo.vue"
-import {provide, reactive} from "vue";
+import {onMounted, provide, reactive, watch} from "vue";
 
 import router from "./router";
 
-let state = reactive({
+interface App {
+  history: any[]
+}
+
+let state = reactive<App>({
   history: []
 })
 
+
+onMounted(() => {
+  let local = localStorage.getItem("cache")
+  if (!local) return
+  state.history = JSON.parse(local).history
+  console.log(state)
+})
+
+watch(state, (recent: any, old: any) => {
+  if (recent !== [])
+    localStorage.setItem("cache", JSON.stringify(recent))
+})
 provide('cache', state)
+
+
 
 </script>
 

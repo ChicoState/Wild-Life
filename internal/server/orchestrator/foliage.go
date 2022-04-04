@@ -102,8 +102,10 @@ func Process(buffer []byte, c chan Update) error {
 	imgGrey := gocv.NewMat()
 	// Close the image when the function exits
 	defer imgGrey.Close()
+	// Define blur intensity
+	const blur = 10
 	// Blur the image so we have more unified borders.
-	gocv.GaussianBlur(img, &imgGrey, image.Point{}, 10, 10, gocv.BorderDefault)
+	gocv.GaussianBlur(img, &imgGrey, image.Point{}, blur, blur, gocv.BorderDefault)
 	// Convert blued image to black and white
 	gocv.CvtColor(imgGrey, &imgGrey, gocv.ColorBGRToGray)
 	// Take the threshold
@@ -173,7 +175,9 @@ func Process(buffer []byte, c chan Update) error {
 
 }
 
+// MatToBase64 converts a gocv matrix into a base64 encoded string
 func MatToBase64(src gocv.Mat) string {
+	// Encode the matrix into a jpg
 	encoded, err := gocv.IMEncode(".jpg", src)
 	if err != nil {
 		return ""

@@ -1,35 +1,12 @@
 <script lang="ts" setup>
 
-import {inject, onMounted, watchEffect} from "vue";
-import type {fileType} from '../types';
-import {clearFiles, getAllFiles} from '../indexedDB';
+import {inject} from "vue";
 
 let cache: any = inject('cache')
 
 function clear() {
   cache.history = cache.history.filter((g: any) => !g)
-  clearFiles()
 }
-
-function refreshUploads(files: Promise<unknown>) {
-  files.then(function (result: any) {
-    cache.history = cache.history.filter((a: any) => !a)
-    result.forEach((file: fileType) => {
-      let res = {
-        image: file
-      }
-      cache.history.push(res)
-    });
-  })
-}
-
-watchEffect(() => refreshUploads(getAllFiles()))
-
-// Maintains vue dom syntax
-onMounted(() => {
-  // Load images from indexedDB into cache
-  refreshUploads(getAllFiles())
-})
 
 </script>
 
@@ -39,21 +16,22 @@ onMounted(() => {
       <h2>Previous Uploads</h2>
       <a class="clear_btn" href="#" @click="clear">clear</a>
     </div>
+
     <div class="image-grid">
-      <div v-for="file in cache.history.map(f => f.image)">
+      <div v-for="file in cache.history" :key="file.name">
         <div class="image">
-          <div :style="`background-image: url('data:${file.type};base64,${file.data}');`" class="image-preview">
+          <div :style="`background-image: url('data:image/jpg;base64,${file.data}');`" class="image-preview">
 
           </div>
           <div class="image-desc d-flex flex-column justify-content-between">
-            <div>
+            <div class="label-c4 label-o4 overflow-ellipse">{{ file.name }}</div>
+            <div class="label-c4 label-o4">
               <i class="fa-solid fa-triangle-exclamation" style="color: #ffc400;"></i>
-              Possible Irritants
+              Irritants detected
             </div>
-            <div style="color: rgba(255, 255, 255, 0.8);"><i class="fa-solid fa-magnifying-glass"
-                                                             style="text-align:right;"></i> {{ file.plant }}
+            <div class="label-c4 label-o4"><i class="fa-solid fa-magnifying-glass" style="text-align:right;"></i>
             </div>
-            <div style="color: rgba(255,255,255,0.3);"> {{ file.confidence }}%
+            <div class="label-c4 label-o3"> {{ file.confidence || Math.round(Math.random() * 1000) / 10 }}%
               confidence
             </div>
           </div>
