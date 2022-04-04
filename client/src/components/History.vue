@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 
-import {inject, onMounted} from "vue";
+import {inject, onMounted, watchEffect} from "vue";
 import type {fileType} from '../types';
 import {clearFiles, getAllFiles} from '../indexedDB';
 
-const cache: any = inject('cache')
+let cache: any = inject('cache')
 
 function clear() {
-  cache.history = []
+  cache.history = cache.history.filter((g: any) => !g)
   clearFiles()
 }
 
-function refreshUploads() {
-  getAllFiles().then(function (result: any) {
+function refreshUploads(files: Promise<unknown>) {
+  files.then(function (result: any) {
     cache.history = cache.history.filter((a: any) => !a)
     result.forEach((file: fileType) => {
       let res = {
@@ -23,10 +23,12 @@ function refreshUploads() {
   })
 }
 
+watchEffect(() => refreshUploads(getAllFiles()))
+
 // Maintains vue dom syntax
 onMounted(() => {
   // Load images from indexedDB into cache
-  refreshUploads()
+  refreshUploads(getAllFiles())
 })
 
 </script>
@@ -51,7 +53,7 @@ onMounted(() => {
             <div style="color: rgba(255, 255, 255, 0.8);"><i class="fa-solid fa-magnifying-glass"
                                                              style="text-align:right;"></i> {{ file.plant }}
             </div>
-            <div style="color: rgba(255,255,255,0.3);"> {{ file.confidence || Math.round(Math.random() * 100) }}%
+            <div style="color: rgba(255,255,255,0.3);"> {{ file.confidence }}%
               confidence
             </div>
           </div>

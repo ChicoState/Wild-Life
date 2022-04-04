@@ -17,16 +17,56 @@ body {
 }
 
 .text-green {
-  color: #30d158;
+  color: #40826D;
 }
 
 .text-orange {
   color: #ff9f0a;
 }
 
+.gap-0 {
+  gap: 0rem;
+}
+
+.gap-1 {
+  gap: 0.1rem;
+}
+
+.gap-2 {
+  gap: 0.2rem;
+}
+
+.gap-3 {
+  gap: 0.3rem;
+}
+
+.gap-4 {
+  gap: 0.4rem;
+}
+
+.gap-5 {
+  gap: 0.5rem;
+}
+
+.gap-6 {
+  gap: 0.6rem;
+}
+
+.gap-7 {
+  gap: 0.7rem;
+}
+
+.gap-8 {
+  gap: 0.8rem;
+}
+
+.gap-9 {
+  gap: 0.9rem;
+}
+
 .button {
   display: inline-block;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 400;
   padding: 0.5rem 1rem;
@@ -34,22 +74,61 @@ body {
   background-color: #2c2c2e;
 }
 
+.card {
+  min-width: 12rem;
+  width: 100%;
+  display: flex;
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+  padding: 1rem 1rem;
+  box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.05);
+  background-color: #2c2c2e;
+}
+
+.text-input {
+  height: 2rem;
+  display: flex;
+  width: 100%;
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+  padding: 1rem 0.75rem;
+  margin-top: 0.125rem;
+  box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  background-color: #1c1c1e;
+}
+
+.small {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0.125rem 0.375rem;
+}
+
+.text-accent {
+  color: #40826D;
+}
+
+.logo-icon {
+  padding-right: 0.6rem;
+  color: #40826D;
+}
+
+label {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+  margin: 0 0.375rem;
+  font-size: 0.9rem;
+}
+
+.text-input:focus-visible {
+  outline: none !important;
+}
+
 .button:hover {
   color: rgba(204, 204, 204, 0.8);
   cursor: pointer;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-content: center;
-  align-items: center;
-  width: 960px;
-}
-
-.container > div {
-  width: 100%;
 }
 
 .row {
@@ -67,7 +146,7 @@ body {
 /* keep right justified */
 .clear_btn {
   float: right;
-  color: #6cc202;
+  color: #40826D;
   text-decoration: none;
 }
 

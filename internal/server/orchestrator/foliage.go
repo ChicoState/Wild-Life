@@ -103,7 +103,7 @@ func Process(buffer []byte, c chan Update) error {
 	// Close the image when the function exits
 	defer imgGrey.Close()
 	// Blur the image so we have more unified borders.
-	gocv.GaussianBlur(img, &imgGrey, image.Point{}, 40, 40, gocv.BorderDefault)
+	gocv.GaussianBlur(img, &imgGrey, image.Point{}, 10, 10, gocv.BorderDefault)
 	// Convert blued image to black and white
 	gocv.CvtColor(imgGrey, &imgGrey, gocv.ColorBGRToGray)
 	// Take the threshold
@@ -121,7 +121,7 @@ func Process(buffer []byte, c chan Update) error {
 	c <- Update{
 		Time:    time.Now(),
 		State:   "highlight",
-		Message: "highlight generated",
+		Message: "Highlight generated",
 		Data:    bufHighlight,
 	}
 	imgOut := gocv.NewMat()
@@ -131,12 +131,12 @@ func Process(buffer []byte, c chan Update) error {
 	gocv.CvtColor(img, &imgGreyNew, gocv.ColorBGRToGray)
 	gocv.BitwiseAnd(imgGreyNew, imgThresh, &imgOut)
 
+	classifier := gocv.NewCascadeClassifier()
+	classifier.Load("./poisonOakCascade7.xml")
+	rects := classifier.DetectMultiScale(imgOut)
 	// Convert back to an RGB color space
 	gocv.CvtColor(imgOut, &imgOut, gocv.ColorGrayToBGR)
 
-	classifier := gocv.NewCascadeClassifier()
-	classifier.Load("./poisonOakCascade.xml")
-	rects := classifier.DetectMultiScale(imgOut)
 	for _, res := range rects {
 		gocv.Rectangle(&img, res, color.RGBA{
 			R: 180,
@@ -150,11 +150,12 @@ func Process(buffer []byte, c chan Update) error {
 	// Encode the matrix into an image format
 	gocv.Normalize(imgOut, &imgOut, 0, 255, gocv.NormMinMax)
 	bufThreshold := MatToBase64(imgOut)
+
 	// Send the thumbnail to the user
 	c <- Update{
 		Time:    time.Now(),
 		State:   "threshold",
-		Message: "threshold generated",
+		Message: "Threshold generated",
 		Data:    bufThreshold,
 	}
 
@@ -163,7 +164,7 @@ func Process(buffer []byte, c chan Update) error {
 	c <- Update{
 		Time:    time.Now(),
 		State:   "results",
-		Message: "results generated",
+		Message: fmt.Sprintf("%d", len(rects)),
 		Data:    bufResults,
 	}
 	// Draw the contours (Black background with green outlines)

@@ -20,6 +20,7 @@ export class Upload {
     token?: string
     form: FormData
     update: (res: UploadState) => void
+    error: (res: UploadState) => void
     state: UploadState
     history: UploadState[]
     socket?: WebSocket
@@ -29,6 +30,8 @@ export class Upload {
         this.state = {time: "", state: "uploading"} as UploadState
         this.token = ""
         this.update = () => {
+        }
+        this.error = () => {
         }
         this.history = []
     }
@@ -46,7 +49,7 @@ export class Upload {
             .then((res) => {
                 self.uploadSuccess(res)
             }).catch((res) => {
-
+            self.uploadFailure(res)
         })
 
     }
@@ -67,6 +70,10 @@ export class Upload {
         this.socket.onopen = this.wsOpen
         this.socket.onerror = this.wsError
         this.socket.onclose = this.wsClose
+    }
+
+    uploadFailure(res: any) {
+        console.log(res.data)
     }
 
     // Websockets
