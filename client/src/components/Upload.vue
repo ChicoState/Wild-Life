@@ -4,15 +4,30 @@ import {Upload, UploadState} from '../rest';
 import type {fileType} from '../types'
 import Results from "../views/Results.vue";
 
-let state = reactive<{
+
+interface UploadProps {
   upload: Upload,
-  response: any,
   context: boolean,
-}>({
+  response: {
+    name: string,
+    size: number,
+    thumbnail: string,
+    type: string,
+    threshold: string,
+    highlight: string,
+    results: string,
+    confidence: string,
+    progress: UploadState[],
+    token: string,
+  },
+}
+
+let state = reactive<UploadProps>({
   upload: {} as Upload,
   response: {
     name: "",
-    size: "",
+    size: 0,
+    type: "",
     thumbnail: "",
     threshold: "",
     highlight: "",
@@ -58,8 +73,9 @@ function updateStatus(up: UploadState) {
 function reset() {
   state.response = {
     name: "",
-    size: "",
+    size: 0,
     thumbnail: "",
+    type: "",
     threshold: "",
     highlight: "",
     results: "",

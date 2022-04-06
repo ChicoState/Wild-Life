@@ -1,23 +1,34 @@
 <script lang="ts" setup>
 import Loading from "@/components/Loading.vue"
-import {reactive} from "vue";
+import {UploadState} from "../rest";
 
-let props = defineProps({
-  response: {}
-})
 
-let state = reactive({
-  response: props.response
-})
+interface Results {
+  response: {
+    name: string,
+    size: number,
+    type: string,
+    thumbnail: string,
+    threshold: string,
+    highlight: string,
+    results: string,
+    confidence: string,
+    progress: UploadState[],
+    token: string,
+  },
+}
+
+let props = defineProps<Results>()
 
 </script>
 
 <template>
   <div class="d-flex flex-column">
     <div class="title">Results</div>
-    <div class="d-flex flex-lg-row flex-column flex-wrap gap-4">
+    <div v-if="props.response" class="d-flex flex-lg-row flex-column flex-wrap gap-4">
       <div class="result-grid">
-        <div :style="`background-image: url('data:image/jpg;base64,${props.response.thumbnail}');`"
+        <div v-if="props.response"
+             :style="`background-image: url('data:image/jpg;base64,${props.response.thumbnail}');`"
              class="preview-upload">
           <div>Original</div>
           <div v-if="props.response.thumbnail === ''"
