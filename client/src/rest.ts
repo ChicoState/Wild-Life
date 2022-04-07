@@ -45,7 +45,7 @@ export class Upload {
     submit() {
         const headers = {'Content-Type': 'multipart/form-data'};
         const self = this
-        axios.post('http://localhost:5069/upload', this.form, {headers})
+        axios.post('https://wildlife.bradenn.com/api/upload', this.form, {headers})
             .then((res) => {
                 self.uploadSuccess(res)
             }).catch((res) => {
@@ -57,7 +57,7 @@ export class Upload {
     uploadSuccess(res: UploadResponse) {
         this.token = res.data.data.token
         console.log("Upload Success")
-        let conn = `ws://localhost:5069/sockets/${this.token}`
+        let conn = `ws://wildlife.bradenn.com/api/sockets/${this.token}`
         console.log(conn)
         this.socket = new WebSocket(conn)
         let ref = this
