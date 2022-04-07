@@ -57,7 +57,7 @@ export class Upload {
     uploadSuccess(res: UploadResponse) {
         this.token = res.data.data.token
         console.log("Upload Success")
-        let conn = `ws://wildlife.bradenn.com/api/sockets/${this.token}`
+        let conn = `wss://wildlife.bradenn.com/api/sockets/${this.token}`
         console.log(conn)
         this.socket = new WebSocket(conn)
         let ref = this
