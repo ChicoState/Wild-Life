@@ -1,11 +1,11 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
-	"net/http"
-	"wildlife/internal/log"
-
 	"github.com/go-chi/chi/v5"
+	"net/http"
+	"wildlife/internal/server/orchestrator"
 )
 
 // uploadRouter forwards requests to /upload to the appropriate handlers
@@ -14,70 +14,72 @@ func uploadRouter(r chi.Router) {
 	r.Post("/", uploadFile)
 }
 
-type FileResponse struct {
-	Name string `json:"name"`
-	Size int    `json:"size"`
-	Type string `json:"type"`
-	Data []byte `json:"data"`
-	Status int64 `json:"status"`
-	Plant string `json:"plant"`
-	Confidence float64 `json:"confidence"`
+type Response struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
+
+type FileResponse struct {
+	Name  string `json:"name"`
+	Size  int    `json:"size"`
+	Token string `json:"token"`
+}
+
+type FileRequest struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Size int    `json:"size"`
+	Data []byte `json:"data"`
+}
+
+// func (f *FileRequest) toBase64() (string, error) {
+// 	buf := make([]byte, base64.StdEncoding.EncodedLen(len(encoded.GetBytes())))
+// 	// Encode the result matrix to the user
+// 	base64.StdEncoding.Encode(buf, encoded.GetBytes())
+// }
 
 // uploadFile accepts http request containing a multipart file form
 func uploadFile(writer http.ResponseWriter, request *http.Request) {
 	// Attempt to read the file from the request
-	data, m, err := request.FormFile("file")
+	_, m, err := request.FormFile("file")
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		_, err = writer.Write([]byte("File not uploaded correctly, try again"))
-		log.Errf("File not uploaded correctly, try again -> %s", err)
 		if err != nil {
 			return
 		}
 		return
 	}
 
-	// Turn data into byte array
-	dataBytes := make([]byte, m.Size)
-	_, err = data.Read(dataBytes)
+	// Do OpenCV, get Token
+	open, err := m.Open()
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		_, err = writer.Write([]byte("Error reading file"))
-		log.Errf("Error reading file -> %s", err)
-		if err != nil {
-			return
-		}
 		return
 	}
 
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(open)
+	if err != nil {
+		return
+	}
+	token := orchestrator.NewLeafProcessJob(buf.Bytes())
 	// Populate the file response struct
-	response := FileResponse{
-		Name: m.Filename,
-		Type: m.Header.Get("Content-Type"),
-		Size: int(m.Size),
+	fileResponse := FileResponse{
+		Name:  m.Filename,
+		Size:  int(m.Size),
+		Token: token,
 	}
-
-	// OpenCV process here
-	// ...
-
-	// Check if filetype is jpeg or png
-	if response.Type != "image/jpeg" && response.Type != "image/png" {
-		writer.WriteHeader(http.StatusBadRequest)
-		_, err = writer.Write([]byte("File type not supported, try again"))
-		log.Errf("File type not supported, try again -> %s", err)
-		if err != nil {
-			return
-		}
-		return
+	response := Response{
+		Success: true,
+		Message: "success",
+		Data:    fileResponse,
 	}
-
 	// Convert the struct to json
 	marshal, err := json.Marshal(response)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		_, err = writer.Write([]byte("Failed to form JSON"))
-		log.Errf("Failed to form JSON -> %s", err)
 		if err != nil {
 			return
 		}
@@ -87,8 +89,6 @@ func uploadFile(writer http.ResponseWriter, request *http.Request) {
 	_, err = writer.Write(marshal)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		log.Errf("Failed to send response -> %s", err)
 		return
 	}
-	log.Logf("File uploaded successfully")
 }

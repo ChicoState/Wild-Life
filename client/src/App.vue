@@ -1,35 +1,49 @@
 <script setup lang="ts">
-import Upload from './components/Upload.vue'
-import Logo from './components/Logo.vue'
-import History from "./components/History.vue";
-import {provide, reactive} from "vue";
+import Logo from "@/components/Logo.vue"
+import {onMounted, provide, reactive, watch} from "vue";
 
-const cache = reactive({
+import router from "./router";
+
+interface App {
+  history: any[]
+}
+
+let state = reactive<App>({
   history: []
 })
 
-provide('cache', cache)
+
+onMounted(() => {
+  let local = localStorage.getItem("cache")
+  if (!local) return
+  state.history = JSON.parse(local).history
+  console.log(state)
+})
+
+watch(state, (recent: any, old: any) => {
+  if (recent !== [])
+    localStorage.setItem("cache", JSON.stringify(recent))
+})
+provide('cache', state)
+
+
 
 </script>
 
 <template>
-
   <div class="container">
     <div class="d-flex flex-column justify-content-between">
       <div class="d-flex flex-row justify-content-between align-items-center">
         <Logo></Logo>
-        <div>Login</div>
+        <a v-if="router.currentRoute.value.fullPath !== '/login'" class="text-accent" href="/login">Login</a>
+        <a v-else class="text-accent" href="/register">register</a>
       </div>
-      <div class="flex-grow-1">
-        <Upload></Upload>
-      </div>
-      <div>
-        <History></History>
-      </div>
+      <router-view/>
     </div>
   </div>
+
 </template>
 
-<style>
+<style lang="scss">
 
 </style>

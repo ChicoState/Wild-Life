@@ -5,12 +5,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "serve": "vite preview --host 0.0.0.0 --port 5001"
   },
   "dependencies": {
     "axios": "^0.26.1",
     "buffer": "^6.0.3",
-    "vue": "^3.2.25"
+    "moment": "^2.29.1",
+    "vue": "^3.2.25",
+    "vue-router": "^4.0.14"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.2.0",

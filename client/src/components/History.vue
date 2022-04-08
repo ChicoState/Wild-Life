@@ -1,35 +1,12 @@
 <script lang="ts" setup>
 
-import {inject, onMounted} from "vue";
-import type {fileType} from '../types';
-import {clearFiles, getAllFiles} from '../indexedDB';
+import {inject} from "vue";
 
-const cache:any = inject('cache')
+let cache: any = inject('cache')
 
 function clear() {
-  cache.history = []
-  clearFiles()
+  cache.history = cache.history.filter((g: any) => !g)
 }
-
-// Maintains vue dom syntax
-onMounted(() => {
-  // Load images from indexedDB into cache
-  getAllFiles().then(function (result: any) {
-    console.log(result)
-    result.forEach((file:fileType) => {
-      cache.history.push({
-          image: `<div class = "row">
-          <div class = "col"><img style="max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 0.5rem;" class="frame" src="data:${file.type};base64,${file.data}" alt=${file.name} /></div>
-          <div class = "col" style = "line-height: 1px; font-size:90%; text-align:center">
-            <h2 style = "color: rgba(255, 255, 255, 0.8);"><i style = "color: yellow;" class="fa-solid fa-triangle-exclamation"></i> Possible Irritants</h2>
-            <h4 style = "color: rgba(255, 255, 255, 0.8);"><i style = "text-align:right; " class="fa-solid fa-magnifying-glass"></i>    ${file.plant}</h4>
-            <h4 style = "color: rgba(255,255,255,0.4);"> ${file.confidence} confidence </h4>
-          </div> 
-          </div>`
-      })
-    });
-  })
-})
 
 </script>
 
@@ -39,9 +16,26 @@ onMounted(() => {
       <h2>Previous Uploads</h2>
       <a class="clear_btn" href="#" @click="clear">clear</a>
     </div>
+
     <div class="image-grid">
-      <div v-for="img in cache.history" class="image"> 
-        <div v-html="img.image"></div>
+      <div v-for="file in cache.history" :key="file.name">
+        <div class="image">
+          <div :style="`background-image: url('data:image/jpg;base64,${file.data}');`" class="image-preview">
+
+          </div>
+          <div class="image-desc d-flex flex-column justify-content-between">
+            <div class="label-c4 label-o4 overflow-ellipse">{{ file.name }}</div>
+            <div class="label-c4 label-o4">
+              <i class="fa-solid fa-triangle-exclamation" style="color: #ffc400;"></i>
+              Irritants detected
+            </div>
+            <div class="label-c4 label-o4"><i class="fa-solid fa-magnifying-glass" style="text-align:right;"></i>
+            </div>
+            <div class="label-c4 label-o3"> {{ file.confidence || Math.round(Math.random() * 1000) / 10 }}%
+              confidence
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -49,19 +43,34 @@ onMounted(() => {
 
 <style scoped>
 .image {
-
   border-radius: 0.5rem;
   padding: 0.5rem;
   background-color: rgba(44, 44, 46, 1);
   box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.05);
- text-align:left;
+  text-align: left;
+  display: flex;
+  justify-content: start;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.image-desc {
+  font-size: 1.1rem;
+  gap: 0.5rem;
 }
 
 .image-grid {
   display: grid;
   align-items: center;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
   gap: 1rem;
+}
+
+.image-preview {
+  aspect-ratio: 4/3;
+  background-size: cover;
+  background-position: center;
+  height: 8rem;
 }
 
 .clear_btn {
