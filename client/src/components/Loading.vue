@@ -1,8 +1,13 @@
 <script lang="ts" setup>
+interface Loading {
+  size?: string
+}
+
+let props = defineProps<Loading>()
 
 </script>
 <template>
-  <div class="lds-ellipsis">
+  <div :class="props.size?'lds-sm':''" class="lds-ellipsis">
     <div></div>
     <div></div>
     <div></div>
@@ -11,6 +16,14 @@
 </template>
 
 <style scoped>
+
+.lds-sm {
+  transform: scale(0.35) translate(-33px, -33px) !important;
+  width: 1rem !important;
+  height: 1rem !important;
+
+}
+
 .lds-ellipsis {
   display: inline-block;
   position: relative;

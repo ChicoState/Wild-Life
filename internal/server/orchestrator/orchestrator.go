@@ -92,26 +92,29 @@ func (o *Orchestrator) complete(request Request) error {
 
 // resolve handles all completed requests, should be started on init
 func (o *Orchestrator) resolve() error {
-	for done := range o.resolver {
-		o.resolved[done.Key()] = done
-		o.update(done, "complete")
-		o.closeRequest(done)
+	for d := range o.resolver {
+		go func(done Request) {
+			o.resolved[done.Key()] = done
+			o.update(done, "complete")
+			o.closeRequest(done)
+		}(d)
 	}
 	return nil
 }
 
 // Job requests sent to the receiver channel are handled here, should be started on init
 func (o *Orchestrator) receive() error {
-	for request := range o.receiver {
-		o.update(request, "running")
-		update := o.latest[request.Key()]
-		err := request.Run(update)
-		if err != nil {
-			o.update(request, "failed")
-			log.Errf("Orchestrator error: %s", err)
-			continue
-		}
-
+	for req := range o.receiver {
+		go func(request Request) {
+			o.update(request, "running")
+			update := o.latest[request.Key()]
+			err := request.Run(update)
+			if err != nil {
+				o.update(request, "failed")
+				log.Errf("Orchestrator error: %s", err)
+				return
+			}
+		}(req)
 	}
 	return nil
 }

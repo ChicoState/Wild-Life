@@ -9,6 +9,7 @@ import (
 	"math"
 	"time"
 	"wildlife/internal/log"
+	"wildlife/internal/server/tensor"
 )
 
 func init() {
@@ -43,9 +44,16 @@ func (l *LeafProcess) Key() string {
 
 func (l *LeafProcess) Run(c chan Update) error {
 	// Process the image with openCV
+	c <- Update{
+		Time:    time.Now(),
+		State:   "uploaded",
+		Message: "Processing image for analysis",
+		Data:    "",
+	}
 	if err := Process(l.buffer, c); err != nil {
 		return err
 	}
+
 	// DO AI STUFF HERE
 
 	return nil
@@ -64,7 +72,7 @@ func createThumbnail(src gocv.Mat) ([]byte, error) {
 	// Aspect ratio
 	as := float64(h) / float64(w)
 	// New Width
-	nw := math.Min(float64(w), mw)
+	nw := math.Min(mw, float64(w))
 	// New Height
 	nh := nw * as
 	// Resize the source matrix to
@@ -74,6 +82,39 @@ func createThumbnail(src gocv.Mat) ([]byte, error) {
 	buf := MatToBase64(dest)
 	// Return the buffer
 	return []byte(buf), nil
+}
+
+// Generate a thumbnail for later reference
+func createResult(src gocv.Mat) (gocv.Mat, error) {
+	// Allocate a new matrix to hold the final thumbnail
+	dest := gocv.NewMat()
+	// Max Width for thumbnail
+	mw := 2560.0
+	// Width
+	w := src.Cols()
+	// Height
+	h := src.Rows()
+	// Aspect ratio
+	as := float64(h) / float64(w)
+	// New Width
+	nw := mw
+	// New Height
+	nh := nw * as
+	// Resize the source matrix to
+	gocv.Resize(src, &dest, image.Pt(int(nw), int(nh)), 0, 0,
+		gocv.InterpolationDefault)
+	// Return the buffer
+	return dest, nil
+}
+
+func rectCenter(r1 image.Rectangle) image.Point {
+	return image.Pt(r1.Min.X+r1.Dx()/2, r1.Min.Y+r1.Dy()/2)
+}
+
+func distance(r1 image.Rectangle, r2 image.Rectangle) float64 {
+
+	return math.Sqrt(math.Pow(float64(rectCenter(r1).X-rectCenter(r2).X),
+		2) + math.Pow(float64(rectCenter(r1).Y-rectCenter(r2).Y), 2))
 }
 
 // Process accepts a buffer and returns a processed buffer
@@ -94,79 +135,86 @@ func Process(buffer []byte, c chan Update) error {
 	// Send the thumbnail to the user
 	c <- Update{
 		Time:    time.Now(),
-		State:   "thumbnail",
-		Message: "Thumbnail generated",
+		State:   "processing",
+		Message: "Processing image for analysis",
 		Data:    string(thumbnail),
 	}
-	// Convert the image to Greyscale
-	imgGrey := gocv.NewMat()
-	// Close the image when the function exits
-	defer imgGrey.Close()
-	// Define blur intensity
-	const blur = 10
-	// Blur the image so we have more unified borders.
-	gocv.GaussianBlur(img, &imgGrey, image.Point{}, blur, blur, gocv.BorderDefault)
-	// Convert blued image to black and white
-	gocv.CvtColor(imgGrey, &imgGrey, gocv.ColorBGRToGray)
-	// Take the threshold
-	imgThresh := gocv.NewMat()
-	// Close the image when the function exits
-	defer imgThresh.Close()
-	gocv.Threshold(imgGrey, &imgThresh, 60, 255, gocv.ThresholdOtsu|gocv.ThresholdToZero)
-	// Find contours
-	pv := gocv.FindContours(imgThresh, gocv.RetrievalExternal, gocv.ChainApproxNone)
-	// Prepare an image to return
-	highlight := gocv.NewMat()
-	img.CopyTo(&highlight)
-	gocv.DrawContours(&highlight, pv, -1, color.RGBA{R: 60, B: 80, G: 180, A: 128}, 8)
-	bufHighlight := MatToBase64(highlight)
+
 	c <- Update{
 		Time:    time.Now(),
-		State:   "highlight",
-		Message: "Highlight generated",
-		Data:    bufHighlight,
-	}
-	imgOut := gocv.NewMat()
-	// Close the image when the function exits
-	// Convert to black and white
-	imgGreyNew := gocv.NewMat()
-	gocv.CvtColor(img, &imgGreyNew, gocv.ColorBGRToGray)
-	gocv.BitwiseAnd(imgGreyNew, imgThresh, &imgOut)
-
-	classifier := gocv.NewCascadeClassifier()
-	classifier.Load("./poisonOakCascade7.xml")
-	rects := classifier.DetectMultiScale(imgOut)
-	// Convert back to an RGB color space
-	gocv.CvtColor(imgOut, &imgOut, gocv.ColorGrayToBGR)
-
-	for _, res := range rects {
-		gocv.Rectangle(&img, res, color.RGBA{
-			R: 180,
-			G: 60,
-			B: 80,
-			A: 255,
-		}, 4)
+		State:   "analyzing",
+		Message: "",
+		Data:    "",
 	}
 
-	gocv.DrawContours(&imgOut, pv, -1, color.RGBA{R: 60, B: 80, G: 180, A: 128}, 8)
-	// Encode the matrix into an image format
-	gocv.Normalize(imgOut, &imgOut, 0, 255, gocv.NormMinMax)
-	bufThreshold := MatToBase64(imgOut)
+	result, err := createResult(img)
+	if err != nil {
+		return err
+	}
 
-	// Send the thumbnail to the user
+	ids, confidences, boxes := tensor.Detect(result)
+	// _max := math.Max(float64(img.Cols()), float64(img.Rows()))
+	// scale := _max / 800
+	confidence := 0.0
+	tmp := gocv.NewMat()
+	img.CopyTo(&tmp)
+
 	c <- Update{
 		Time:    time.Now(),
-		State:   "threshold",
-		Message: "Threshold generated",
-		Data:    bufThreshold,
+		State:   "compiling",
+		Message: "",
+		Data:    "",
 	}
 
-	bufResults := MatToBase64(img)
+	var primaries []image.Rectangle
+	counts := []int{0}
+
+	for i := 0; i < len(ids); i++ {
+
+		if confidences[i] > confidence {
+			confidence = confidences[i]
+		}
+	}
+
+	for i := 0; i < len(ids); i++ {
+
+		center := image.Pt(boxes[i].Min.X+boxes[i].Dx()/2, boxes[i].Min.Y+boxes[i].Dy()/2)
+
+		gocv.Circle(&result, center, 16, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 16)
+
+		accounted := false
+
+		for k := range primaries {
+			if distance(primaries[k], boxes[i]) < (float64(boxes[i].Dx()+boxes[i].Dy())/2)/2 {
+				primaries[k] = primaries[k].Union(boxes[i])
+				counts[k] += 1
+				accounted = true
+			}
+		}
+
+		if !accounted {
+			primaries = append(primaries, boxes[i])
+			counts = append(counts, 0)
+		}
+
+	}
+
+	for i := range primaries {
+
+		gocv.Rectangle(&result, primaries[i].Inset(-10), color.RGBA{R: 108, G: 194, B: 2, A: 255}, 6)
+		gocv.Rectangle(&result, primaries[i], color.RGBA{R: 135, G: 242, B: 3, A: 255}, 4)
+		gocv.PutText(&result, fmt.Sprintf("%s", "posion oak"), primaries[i].Min.Sub(image.Pt(0, -60)),
+			gocv.FontHersheySimplex, 2,
+			color.RGBA{R: 135, G: 242,
+				B: 3, A: 255}, 12)
+	}
+
+	bufResults := MatToBase64(result)
 	// Send the thumbnail to the user
 	c <- Update{
 		Time:    time.Now(),
 		State:   "results",
-		Message: fmt.Sprintf("%d", len(rects)),
+		Message: fmt.Sprintf("%.2f", confidence*100),
 		Data:    bufResults,
 	}
 	// Draw the contours (Black background with green outlines)
