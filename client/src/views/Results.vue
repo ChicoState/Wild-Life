@@ -96,8 +96,8 @@ let props = defineProps<Results>()
           </div>
           <div class="subtitle mt-4">Confidence</div>
           <div class="pair">
-            <div class="key-pair">detections</div>
-            <div class="value-pair">{{ props.response.confidence }}</div>
+            <div class="key-pair">Irritants Found</div>
+            <div class="value-pair">{{ props.response.confidence }}%</div>
           </div>
           <div class="pair">
             <div class="key-pair">name</div>

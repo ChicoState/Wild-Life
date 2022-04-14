@@ -31,31 +31,32 @@ func NewLeafProcessJob(buffer []byte) string {
 		key:    key,
 		buffer: buffer,
 	}
-	err := orch.enroll(&process)
+	err := orch.Enroll(&process)
 	if err != nil {
 		return key
 	}
 	return key
 }
 
+// Key returns the identifier key of the process
 func (l *LeafProcess) Key() string {
 	return l.key
 }
 
+// Run starts the process
 func (l *LeafProcess) Run(c chan Update) error {
-	// Process the image with openCV
+	// Send an update to the client confirming upload
 	c <- Update{
 		Time:    time.Now(),
 		State:   "uploaded",
 		Message: "Processing image for analysis",
 		Data:    "",
 	}
+	// Attempt to process the buffer
 	if err := Process(l.buffer, c); err != nil {
 		return err
 	}
-
-	// DO AI STUFF HERE
-
+	// return no errors
 	return nil
 }
 
@@ -107,10 +108,12 @@ func createResult(src gocv.Mat) (gocv.Mat, error) {
 	return dest, nil
 }
 
+// Get the center point of an image.Rectangle
 func rectCenter(r1 image.Rectangle) image.Point {
 	return image.Pt(r1.Min.X+r1.Dx()/2, r1.Min.Y+r1.Dy()/2)
 }
 
+// Get the distance between the center of two rectangles
 func distance(r1 image.Rectangle, r2 image.Rectangle) float64 {
 
 	return math.Sqrt(math.Pow(float64(rectCenter(r1).X-rectCenter(r2).X),
@@ -168,45 +171,62 @@ func Process(buffer []byte, c chan Update) error {
 
 	var primaries []image.Rectangle
 	counts := []int{0}
+	// faintGreen := color.RGBA{R: 54, G: 97, B: 1, A: 255}
+	lightGreen := color.RGBA{R: 135, G: 242, B: 3, A: 255}
+	darkGreen := color.RGBA{R: 108, G: 194, B: 2, A: 255}
+	textColor := color.RGBA{R: 255, G: 255, B: 255, A: 255}
+
+	pv := gocv.NewPointVector()
 
 	for i := 0; i < len(ids); i++ {
 
 		if confidences[i] > confidence {
 			confidence = confidences[i]
 		}
-	}
-
-	for i := 0; i < len(ids); i++ {
 
 		center := image.Pt(boxes[i].Min.X+boxes[i].Dx()/2, boxes[i].Min.Y+boxes[i].Dy()/2)
+		pv.Append(center)
+		// gocv.Circle(&result, center, 16, faintGreen, 4)
+		// gocv.Rectangle(&result, boxes[i].Inset(boxes[i].Size().X/6), faintGreen, 4)
 
-		gocv.Circle(&result, center, 16, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 16)
+		// gocv.EllipseWithParams(&result, center, image.Pt(boxes[i].Dx()/2, boxes[i].Dy()/2), 0, 0, 360, color.RGBA{R: 255,
+		// 	G: 255, B: 255,
+		// 	A: 255}, 4, gocv.Line4, 0)
 
 		accounted := false
 
 		for k := range primaries {
 			if distance(primaries[k], boxes[i]) < (float64(boxes[i].Dx()+boxes[i].Dy())/2)/2 {
 				primaries[k] = primaries[k].Union(boxes[i])
-				counts[k] += 1
 				accounted = true
+				counts[k] += 1
 			}
 		}
+		gocv.Circle(&result, center, 16, textColor, 2)
+		gocv.Line(&result, image.Pt(center.X, center.Y-60), image.Pt(center.X, center.Y+60), textColor, 2)
+		gocv.Line(&result, image.Pt(center.X-60, center.Y), image.Pt(center.X+60, center.Y), textColor, 2)
 
 		if !accounted {
 			primaries = append(primaries, boxes[i])
-			counts = append(counts, 0)
+			counts = append(counts, 1)
 		}
 
 	}
 
 	for i := range primaries {
 
-		gocv.Rectangle(&result, primaries[i].Inset(-10), color.RGBA{R: 108, G: 194, B: 2, A: 255}, 6)
-		gocv.Rectangle(&result, primaries[i], color.RGBA{R: 135, G: 242, B: 3, A: 255}, 4)
-		gocv.PutText(&result, fmt.Sprintf("%s", "posion oak"), primaries[i].Min.Sub(image.Pt(0, -60)),
-			gocv.FontHersheySimplex, 2,
-			color.RGBA{R: 135, G: 242,
-				B: 3, A: 255}, 12)
+		gocv.Rectangle(&result, primaries[i].Inset(-10), darkGreen, 6)
+
+		gocv.Rectangle(&result, primaries[i], lightGreen, 4)
+
+		loc := primaries[i].Inset(-10)
+
+		gocv.Rectangle(&result, image.Rect(loc.Min.X-3, loc.Min.Y-10, loc.Max.X+3,
+			loc.Min.Y-60), darkGreen, -1)
+
+		gocv.PutText(&result, fmt.Sprintf("%s (%d)", "Posion Oak", counts[i]),
+			primaries[i].Min.Sub(image.Pt(0, 35)),
+			gocv.FontHersheySimplex, 1, textColor, 4)
 	}
 
 	bufResults := MatToBase64(result)

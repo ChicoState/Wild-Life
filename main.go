@@ -5,10 +5,11 @@ import (
 	"wildlife/internal/log"
 	"wildlife/internal/server"
 	"wildlife/internal/server/controller"
+	"wildlife/internal/server/orchestrator"
 	"wildlife/internal/server/tensor"
 )
 
-const VERSION = "0.0.1"
+const VERSION = "0.1.2"
 const OnnxModel = "assets/poisonOak.onnx"
 
 func main() {
@@ -27,6 +28,11 @@ func main() {
 		return
 	}
 
+	err = orchestrator.NewOrchestrator()
+	if err != nil {
+		log.Errf("Error initializing model: %s", err)
+		return
+	}
 	// Initialize the controllers with the database
 	err = controller.InitController()
 	if err != nil {

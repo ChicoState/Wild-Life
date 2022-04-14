@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-const ScaleFactor = 255
+const ScaleFactor = 300
 
 // ideal since this is what the model expects most of the time
 
@@ -15,7 +15,7 @@ const ImgScale = 640
 
 // [1 25200 6] index 2 is the number of expected outputs
 
-const NumOut = 3
+const NumOut = 6
 
 const MaxConf = 0.82
 
