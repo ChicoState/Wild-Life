@@ -171,6 +171,7 @@ func Process(buffer []byte, c chan Update) error {
 
 	var primaries []image.Rectangle
 	counts := []int{0}
+	primaryConfidences := []float64{0}
 	// faintGreen := color.RGBA{R: 54, G: 97, B: 1, A: 255}
 	lightGreen := color.RGBA{R: 135, G: 242, B: 3, A: 255}
 	darkGreen := color.RGBA{R: 108, G: 194, B: 2, A: 255}
@@ -200,15 +201,20 @@ func Process(buffer []byte, c chan Update) error {
 				primaries[k] = primaries[k].Union(boxes[i])
 				accounted = true
 				counts[k] += 1
+				if primaryConfidences[k] < confidences[i] || primaryConfidences[k] == 0 {
+					primaryConfidences[k] = confidences[i]
+				}
 			}
 		}
-		gocv.Circle(&result, center, 16, textColor, 2)
-		gocv.Line(&result, image.Pt(center.X, center.Y-60), image.Pt(center.X, center.Y+60), textColor, 2)
-		gocv.Line(&result, image.Pt(center.X-60, center.Y), image.Pt(center.X+60, center.Y), textColor, 2)
+
+		gocv.Circle(&result, center, 16, textColor, 1)
+		gocv.Line(&result, image.Pt(center.X, center.Y-60), image.Pt(center.X, center.Y+60), textColor, 1)
+		gocv.Line(&result, image.Pt(center.X-60, center.Y), image.Pt(center.X+60, center.Y), textColor, 1)
 
 		if !accounted {
 			primaries = append(primaries, boxes[i])
 			counts = append(counts, 1)
+			primaryConfidences = append(primaryConfidences, confidences[i])
 		}
 
 	}
@@ -224,7 +230,7 @@ func Process(buffer []byte, c chan Update) error {
 		gocv.Rectangle(&result, image.Rect(loc.Min.X-3, loc.Min.Y-10, loc.Max.X+3,
 			loc.Min.Y-60), darkGreen, -1)
 
-		gocv.PutText(&result, fmt.Sprintf("%s (%d)", "Posion Oak", counts[i]),
+		gocv.PutText(&result, fmt.Sprintf("%s (%.2f%%)", "Posion Oak", primaryConfidences[i]*100),
 			primaries[i].Min.Sub(image.Pt(0, 35)),
 			gocv.FontHersheySimplex, 1, textColor, 4)
 	}
