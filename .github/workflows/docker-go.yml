@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout Code
+        # Checkout Code
       - uses: actions/checkout@v3
       - name: Build the Docker image
-      # Configure BuildX
+        # Configure BuildX
       - name: Configure Docker buildx
         uses: docker/setup-buildx-action@v1
-      # Cache layers
+        # Cache layers
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
@@ -27,13 +27,13 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      # Push to Docker Hub
+        # Push to Docker Hub
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # And make it available for the builds
+        # And make it available for the builds
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
