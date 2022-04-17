@@ -68,7 +68,7 @@ func uploadFile(writer http.ResponseWriter, request *http.Request) {
 	fileResponse := FileResponse{
 		Name:  m.Filename,
 		Size:  int(m.Size),
-		Token: token,
+		Token: token.String(),
 	}
 	response := Response{
 		Success: true,

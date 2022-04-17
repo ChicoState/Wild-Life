@@ -2,53 +2,12 @@ package orchestrator
 
 import (
 	"fmt"
-	"math/rand"
+	"github.com/google/uuid"
 	"time"
 	"wildlife/internal/log"
 )
 
-var orch *Orchestrator
-
-type Request interface {
-	Run(chan Update) error
-	Key() string
-}
-
-type Orchestrator struct {
-	receiver chan Request
-	resolver chan Request
-	resolved map[string]Request
-	latest   map[string]chan Update
-}
-
-// NewOrchestrator initializes a new Orchestrator
-func NewOrchestrator() error {
-	// Initialize the Orchestrator struct
-	o := Orchestrator{
-		receiver: make(chan Request),
-		resolver: make(chan Request, 16),
-		resolved: map[string]Request{},
-		latest:   map[string]chan Update{},
-	}
-	orch = &o
-	// Start listening on the receiver channel
-	go func() {
-		err := orch.receive()
-		if err != nil {
-			log.Errf("Orchestrator receiver exited: %s", err.Error())
-		}
-	}()
-	// Start listening on the resolver channel
-	go func() {
-		err := orch.resolve()
-		if err != nil {
-			log.Errf("Orchestrator resolver exited: %s", err.Error())
-		}
-	}()
-
-	// Return no errors
-	return nil
-}
+var meta *Orchestrator
 
 type Update struct {
 	Time    time.Time   `json:"time"`
@@ -57,23 +16,78 @@ type Update struct {
 	Data    interface{} `json:"data"`
 }
 
-func Connect(token string) (chan Update, error) {
-	if orch.latest[token] == nil {
-		return nil, fmt.Errorf("invalid token")
-	}
-	return orch.latest[token], nil
+type Request interface {
+	Assign(uuid.UUID)
+	Run(chan Update) error
+	Key() uuid.UUID
 }
 
-func randomSequence() string {
-	template := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-	var out string
-	rand.Seed(time.Now().Unix())
-	for i := 0; i < 64; i++ {
-		r := rand.Intn(26)
-		u := template[r]
-		out += string(u)
+type Orchestrator struct {
+	running  bool
+	receiver chan Request
+	resolver chan Request
+	resolved map[uuid.UUID]Request
+	latest   map[uuid.UUID]chan Update
+}
+
+// NewOrchestrator initializes a new Orchestrator
+func NewOrchestrator() (*Orchestrator, error) {
+	if meta != nil {
+		return nil, fmt.Errorf("orchestrator has already been initialized")
 	}
-	return out
+	// Initialize the Orchestrator struct
+	meta = &Orchestrator{
+		receiver: make(chan Request),
+		resolver: make(chan Request, 16),
+		resolved: map[uuid.UUID]Request{},
+		latest:   map[uuid.UUID]chan Update{},
+	}
+	// Begin listening on channels
+	err := meta.start()
+	if err != nil {
+		return nil, err
+	}
+	return meta, nil
+}
+
+// start begins listening on the channels
+func (o *Orchestrator) start() error {
+	// Start listening on the receiver channel
+	go func() {
+		err := o.receive()
+		if err != nil {
+			log.Errf("orchestrator receiver exited: %s", err.Error())
+		}
+	}()
+	// Start listening on the resolver channel
+	go func() {
+		err := o.resolve()
+		if err != nil {
+			log.Errf("orchestrator receiver exited: %s", err.Error())
+		}
+	}()
+
+	return nil
+}
+
+// Close will exit the Orchestrator safely
+func (o *Orchestrator) Close() error {
+	if o.receiver != nil {
+		close(o.receiver)
+	}
+
+	if o.resolver != nil {
+		close(o.resolver)
+	}
+	return nil
+}
+
+// Connect accepts incoming pared connections
+func Connect(token uuid.UUID) (chan Update, error) {
+	if meta.latest[token] == nil {
+		return nil, fmt.Errorf("token not found")
+	}
+	return meta.latest[token], nil
 }
 
 // update forwards an update message state to a client
@@ -90,17 +104,20 @@ func (o *Orchestrator) closeRequest(req Request) {
 }
 
 // Enroll is used to initialize a connection between a client and the server
-func (o *Orchestrator) Enroll(req Request) error {
+func (o *Orchestrator) Enroll(req Request) (uuid.UUID, error) {
+	// Generate a new UUID for the incoming request
+	uid := uuid.New()
+	req.Assign(uid)
 	// Open a channel with a ten message buffer
 	rx := make(chan Update, 10)
 	// Register this channel with the request token identifier
-	orch.latest[req.Key()] = rx
+	o.latest[uid] = rx
 	// Send the request to the receiver
 	o.receiver <- req
 	// Notify the client of a connection
 	o.update(req, "queued")
 	// Return no errors
-	return nil
+	return uid, nil
 }
 
 // resolve handles messages sent to the resolver channel
@@ -124,7 +141,7 @@ func (o *Orchestrator) resolve() error {
 // receive handles messages sent to the receiver channel
 func (o *Orchestrator) receive() error {
 	// Make sure channel is open
-	if o.resolver == nil {
+	if o.receiver == nil {
 		return fmt.Errorf("receiver channel is nil")
 	}
 	// Listen for new messages sent to receiver

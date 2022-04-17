@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/google/uuid"
 	"gocv.io/x/gocv"
 	"image"
 	"image/color"
@@ -17,80 +18,290 @@ func init() {
 	log.Logf("Using OpenCV v%s", gocv.OpenCVVersion())
 }
 
+const thumbnailResolution = 360
+const resultResolution = 2560
+
 type LeafProcess struct {
-	key    string
+	key    uuid.UUID
 	buffer []byte
 	result string
 	points []interface{}
 }
 
+func (l *LeafProcess) Assign(u uuid.UUID) {
+	l.key = u
+}
+
 // NewLeafProcessJob creates a request for a session token
-func NewLeafProcessJob(buffer []byte) string {
-	key := randomSequence()
+func NewLeafProcessJob(buffer []byte) uuid.UUID {
 	process := LeafProcess{
-		key:    key,
 		buffer: buffer,
+		key:    uuid.New(),
 	}
-	err := orch.Enroll(&process)
+	id, err := meta.Enroll(&process)
 	if err != nil {
-		return key
+		return id
 	}
-	return key
+	return id
 }
 
 // Key returns the identifier key of the process
-func (l *LeafProcess) Key() string {
+func (l *LeafProcess) Key() uuid.UUID {
 	return l.key
+}
+
+func NewUpdate(state string, message string, data interface{}) Update {
+	return Update{
+		Time:    time.Now(),
+		State:   state,
+		Message: message,
+		Data:    data,
+	}
 }
 
 // Run starts the process
 func (l *LeafProcess) Run(c chan Update) error {
 	// Send an update to the client confirming upload
-	c <- Update{
-		Time:    time.Now(),
-		State:   "uploaded",
-		Message: "Processing image for analysis",
-		Data:    "",
-	}
-	// Attempt to process the buffer
+	c <- NewUpdate("uploaded", "Processing image for analysis", nil)
 	if err := Process(l.buffer, c); err != nil {
 		return err
 	}
-	// return no errors
 	return nil
 }
 
-// Generate a thumbnail for later reference
-func createThumbnail(src gocv.Mat) ([]byte, error) {
-	// Allocate a new matrix to hold the final thumbnail
-	dest := gocv.NewMat()
-	// Max Width for thumbnail
-	mw := 360.0
-	// Width
-	w := src.Cols()
-	// Height
-	h := src.Rows()
-	// Aspect ratio
-	as := float64(h) / float64(w)
-	// New Width
-	nw := math.Min(mw, float64(w))
-	// New Height
-	nh := nw * as
-	// Resize the source matrix to
-	gocv.Resize(src, &dest, image.Pt(int(nw), int(nh)), 0, 0,
-		gocv.InterpolationDefault)
-	// Convert to jpg
-	buf := MatToBase64(dest)
-	// Return the buffer
-	return []byte(buf), nil
+type Detection struct {
+	bounds      image.Rectangle
+	confidence  float64
+	boxes       []image.Rectangle
+	confidences []float64
 }
 
-// Generate a thumbnail for later reference
-func createResult(src gocv.Mat) (gocv.Mat, error) {
+// aggregateBoxes combines duplicated boxes, and boxes mostly overlapping
+func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection, error) {
+	var candidates []Detection
+	// Iterate through all the detections
+	for i, box := range boxes {
+		assimilated := false
+		boxAvg := float64(box.Dx()+box.Dy()) / 2.0
+		// Iterate through existing candidates to see if any of them share a similar disposition
+		for _, candidate := range candidates {
+			candidateAvg := float64(candidate.bounds.Dx()+candidate.bounds.Dy()) / 2.0
+			// Calculate the threshold for how far the box should be before it is grouped
+			groupingThreshold := ((boxAvg + candidateAvg) / 2.0) / 2.0
+			if distance(candidate.bounds, box) <= groupingThreshold {
+				// Create a new box containing both boxes
+				candidate.bounds = candidate.bounds.Union(box)
+				// Add the current box to the subarray within the detection
+				candidate.boxes = append(candidate.boxes, box)
+				// Similarly, mark the confidences
+				candidate.confidences = append(candidate.confidences, confidences[i])
+				// Since this box was assimilated into an existing candidate,
+				// we don't want to add it to the candidates again.
+				assimilated = true
+				// Break out of the for loop so this box isn't grouped with other candidates.
+				break
+			}
+		}
+		// Check if the box as assimilated
+		if !assimilated {
+			// If the box is virgin, we will initialize a detection struct for it
+			detection := Detection{
+				bounds:      box,
+				boxes:       []image.Rectangle{},
+				confidences: confidences,
+				confidence:  confidences[i],
+			}
+			// Add the box to the candidates array
+			candidates = append(candidates, detection)
+		}
+	}
+	// Generate the average confidence based on the confidences from the above steps
+	// Iterate through all candidates allocated in the above steps
+	for _, candidate := range candidates {
+		// Initialize a variable with the confidence of the first detection
+		sum := candidate.confidence
+		// Iterate through each child confidence
+		for _, confidence := range candidate.confidences {
+			// Add it to the confidence sum
+			sum += confidence
+		}
+		// Set the detection level confidence to the average of the grouped confidences, plus the original
+		candidate.confidence = sum / float64(len(candidate.confidences))
+	}
+	return candidates, nil
+}
+
+var textColor = color.RGBA{R: 255, G: 255, B: 255, A: 255}
+
+// drawDetections presents the detections on the provided matrix in a human-readable format
+func drawDetections(mat *gocv.Mat, detections []Detection) error {
+	// Create a new pseudo-mask
+	mask := gocv.NewMatWithSize(mat.Rows(), mat.Cols(), mat.Type())
+	// Allocated a new matrix
+	dimmed := gocv.NewMat()
+	// Copy the input mat to be dimmed
+	mat.CopyTo(&dimmed)
+	// Adjust the gama of the mat to create a dimmed matrix
+	gocv.AddWeighted(*mat, 0.5, mask, 0.5, 0.6, &dimmed)
+	// The intensity of the background space blur
+	const blurRadius = 20
+	// Blur the background to create a sense of depth
+	gocv.GaussianBlur(dimmed, &dimmed, image.Point{}, blurRadius, blurRadius, gocv.BorderReflect)
+	// Draw the mask of each detection
+	for _, detection := range detections {
+		gocv.Rectangle(&mask, detection.bounds, textColor, -1)
+	}
+	// Create a version of mat where only the detections are visible
+	gocv.BitwiseAnd(*mat, mask, mat)
+	// Invert the mask to now only highlight empty space
+	gocv.BitwiseNot(mask, &mask)
+	// Cut the darkened empty space from dimmed
+	gocv.BitwiseAnd(dimmed, mask, &dimmed)
+	// Combine the two matrices into mat
+	gocv.BitwiseOr(*mat, dimmed, mat)
+
+	// Iterate through each detection
+	for _, detection := range detections {
+		// Define a local variable for readability
+		detection.bounds = detection.bounds.Add(image.Pt(4, 4))
+		err := drawDetectionCorners(mat, detection, color.RGBA{
+			R: 0,
+			G: 0,
+			B: 0,
+			A: 0,
+		})
+		if err != nil {
+			return err
+		}
+		detection.bounds = detection.bounds.Sub(image.Pt(4, 4))
+		err = drawDetectionCorners(mat, detection, textColor)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+// drawDetectionCorners draws the lines at the corners of a detection and a cross-hair in the middle
+func drawDetectionCorners(mat *gocv.Mat, detection Detection, clr color.RGBA) error {
+	// Define a local instance of the bounds rectangle
+	rect := detection.bounds
+	// Define an inset distance variable
+	const insetDistance = -10
+	// Create the inset rect to make the corners appear to have depth
+	insetRect := rect.Inset(insetDistance)
+	// Define macro variables to hold rect dimensions
+	w := insetRect.Dx()
+	h := insetRect.Dy()
+	// Find the center point
+	center := image.Pt(insetRect.Min.X+w/2, insetRect.Min.Y+h/2)
+	// Define the four corners of the detection area
+	corners := [4]image.Point{
+		// Bottom Right
+		image.Pt(1, 1),
+		// Top Right
+		image.Pt(1, -1),
+		// Top Left
+		image.Pt(-1, 1),
+		// Bottom Left
+		image.Pt(-1, -1),
+	}
+	// Define a line length
+	const line = 30
+	// Define the line thickness
+	const lineWeight = 3
+	localOffsets := [4][4]int{
+		// Bottom Right
+		{-line, 0, 0, -line},
+		// Top Right
+		{0, line, -line, 0},
+		// Top Left
+		{line, 0, 0, -line},
+		// Bottom Left
+		{0, line, line, 0},
+	}
+	// Draw all four corners
+	for i, loc := range localOffsets {
+		// Compute the point corresponding to the correct corner
+		local := center.Add(image.Pt((w/2)*corners[i].X, (h/2)*corners[i].Y))
+		// Draw both lines to enclose the pseudo-square
+		gocv.Line(mat, local, local.Add(image.Pt(loc[0], loc[1])), clr, lineWeight)
+		gocv.Line(mat, local, local.Add(image.Pt(loc[2], loc[3])), clr, lineWeight)
+	}
+
+	// Define constants for ui
+	const fontScale = 1.3
+	const fontThickness = 2
+	// Get text metrics for dynamically rendered text
+	textDimensions := gocv.GetTextSize(fmt.Sprintf("%.2f%%", detection.confidence*100), gocv.FontHersheyDuplex, fontScale, fontThickness)
+	// Draw the offset text
+	gocv.PutText(mat, fmt.Sprintf("%.2f%%", detection.confidence*100),
+		rect.Min.Add(image.Pt(rect.Dx()-textDimensions.X, textDimensions.Y)).Add(image.Pt(-16, 16)),
+		gocv.FontHersheyDuplex, fontScale,
+		clr, fontThickness)
+	// Draw a crosshair in the middle
+	gocv.Line(mat, image.Pt(center.X, center.Y-line), image.Pt(center.X, center.Y+line), clr, lineWeight)
+	gocv.Line(mat, image.Pt(center.X-line, center.Y), image.Pt(center.X+line, center.Y), clr, lineWeight)
+	return nil
+}
+
+// Process accepts a buffer and returns a processed buffer
+func Process(buffer []byte, client chan Update) error {
+	// Read the buffer in
+	img, err := gocv.IMDecode(buffer, gocv.IMReadAnyColor)
+	// Close the image when the function exits
+	if err != nil {
+		fmt.Printf("Error opening image buffer\n")
+		return nil
+	}
+	// Defer the closing of the image
+	defer func(img *gocv.Mat) {
+		err = img.Close()
+		if err != nil {
+			fmt.Printf("Error closing image buffer\n")
+		}
+	}(&img)
+	// Generate a thumbnail
+	thumbnail, err := createThumbnail(img)
+	if err != nil {
+		return err
+	}
+	// Send the thumbnail to the user
+	client <- NewUpdate("processing", "Processed image for analysis", string(thumbnail))
+	// Resize the uploaded buffer to a fixed width
+	result, err := resizeMatrixByWidth(img, resultResolution)
+	if err != nil {
+		return err
+	}
+	// Run the detection model on the upload
+	_, confidences, boxes := tensor.Detect(result)
+	// Update the user that the model has run
+	client <- NewUpdate("compiling", "", nil)
+	// Aggregate all the detections into a few mains ones
+	detections, err := aggregateBoxes(boxes, confidences)
+	if err != nil {
+		return err
+	}
+	// Draw the detections found previously
+	err = drawDetections(&result, detections)
+	if err != nil {
+		return err
+	}
+	// Convert the buffer to base64
+	bufResults := matToBase64(result)
+	// Send the final results to the user
+	client <- NewUpdate("results", "", bufResults)
+	return nil
+}
+
+// resizeMatrixByWidth resizes a matrix to conform to a provided maxWidth
+func resizeMatrixByWidth(src gocv.Mat, maxWidth int) (gocv.Mat, error) {
 	// Allocate a new matrix to hold the final thumbnail
 	dest := gocv.NewMat()
 	// Max Width for thumbnail
-	mw := 2560.0
+	mw := float64(maxWidth)
 	// Width
 	w := src.Cols()
 	// Height
@@ -108,149 +319,21 @@ func createResult(src gocv.Mat) (gocv.Mat, error) {
 	return dest, nil
 }
 
-// Get the center point of an image.Rectangle
-func rectCenter(r1 image.Rectangle) image.Point {
-	return image.Pt(r1.Min.X+r1.Dx()/2, r1.Min.Y+r1.Dy()/2)
+// createThumbnail generates a thumbnail for the client
+func createThumbnail(src gocv.Mat) ([]byte, error) {
+	// Resize the input matrix to have a max width of 360 pixels
+	matrix, err := resizeMatrixByWidth(src, 360)
+	if err != nil {
+		return nil, err
+	}
+	// Convert to jpg
+	buf := matToBase64(matrix)
+	// Return the buffer
+	return []byte(buf), nil
 }
 
-// Get the distance between the center of two rectangles
-func distance(r1 image.Rectangle, r2 image.Rectangle) float64 {
-
-	return math.Sqrt(math.Pow(float64(rectCenter(r1).X-rectCenter(r2).X),
-		2) + math.Pow(float64(rectCenter(r1).Y-rectCenter(r2).Y), 2))
-}
-
-// Process accepts a buffer and returns a processed buffer
-func Process(buffer []byte, c chan Update) error {
-	// Read the buffer in
-	img, err := gocv.IMDecode(buffer, gocv.IMReadAnyColor)
-	// Close the image when the function exits
-	defer img.Close()
-	if err != nil {
-		fmt.Printf("Error opening image buffer\n")
-		return nil
-	}
-	// Generate a thumbnail
-	thumbnail, err := createThumbnail(img)
-	if err != nil {
-		return err
-	}
-	// Send the thumbnail to the user
-	c <- Update{
-		Time:    time.Now(),
-		State:   "processing",
-		Message: "Processing image for analysis",
-		Data:    string(thumbnail),
-	}
-
-	c <- Update{
-		Time:    time.Now(),
-		State:   "analyzing",
-		Message: "",
-		Data:    "",
-	}
-
-	result, err := createResult(img)
-	if err != nil {
-		return err
-	}
-
-	ids, confidences, boxes := tensor.Detect(result)
-	// _max := math.Max(float64(img.Cols()), float64(img.Rows()))
-	// scale := _max / 800
-	confidence := 0.0
-	tmp := gocv.NewMat()
-	img.CopyTo(&tmp)
-
-	c <- Update{
-		Time:    time.Now(),
-		State:   "compiling",
-		Message: "",
-		Data:    "",
-	}
-
-	var primaries []image.Rectangle
-	counts := []int{0}
-	primaryConfidences := []float64{0}
-	// faintGreen := color.RGBA{R: 54, G: 97, B: 1, A: 255}
-	lightGreen := color.RGBA{R: 135, G: 242, B: 3, A: 255}
-	darkGreen := color.RGBA{R: 108, G: 194, B: 2, A: 255}
-	textColor := color.RGBA{R: 255, G: 255, B: 255, A: 255}
-
-	pv := gocv.NewPointVector()
-
-	for i := 0; i < len(ids); i++ {
-
-		if confidences[i] > confidence {
-			confidence = confidences[i]
-		}
-
-		center := image.Pt(boxes[i].Min.X+boxes[i].Dx()/2, boxes[i].Min.Y+boxes[i].Dy()/2)
-		pv.Append(center)
-		// gocv.Circle(&result, center, 16, faintGreen, 4)
-		// gocv.Rectangle(&result, boxes[i].Inset(boxes[i].Size().X/6), faintGreen, 4)
-
-		// gocv.EllipseWithParams(&result, center, image.Pt(boxes[i].Dx()/2, boxes[i].Dy()/2), 0, 0, 360, color.RGBA{R: 255,
-		// 	G: 255, B: 255,
-		// 	A: 255}, 4, gocv.Line4, 0)
-
-		accounted := false
-
-		for k := range primaries {
-			if distance(primaries[k], boxes[i]) < (float64(boxes[i].Dx()+boxes[i].Dy())/2)/2 {
-				primaries[k] = primaries[k].Union(boxes[i])
-				accounted = true
-				counts[k] += 1
-				if primaryConfidences[k] < confidences[i] || primaryConfidences[k] == 0 {
-					primaryConfidences[k] = confidences[i]
-				}
-			}
-		}
-
-		gocv.Circle(&result, center, 16, textColor, 1)
-		gocv.Line(&result, image.Pt(center.X, center.Y-60), image.Pt(center.X, center.Y+60), textColor, 1)
-		gocv.Line(&result, image.Pt(center.X-60, center.Y), image.Pt(center.X+60, center.Y), textColor, 1)
-
-		if !accounted {
-			primaries = append(primaries, boxes[i])
-			counts = append(counts, 1)
-			primaryConfidences = append(primaryConfidences, confidences[i])
-		}
-
-	}
-
-	for i := range primaries {
-
-		gocv.Rectangle(&result, primaries[i].Inset(-10), darkGreen, 6)
-
-		gocv.Rectangle(&result, primaries[i], lightGreen, 4)
-
-		loc := primaries[i].Inset(-10)
-
-		gocv.Rectangle(&result, image.Rect(loc.Min.X-3, loc.Min.Y-10, loc.Max.X+3,
-			loc.Min.Y-60), darkGreen, -1)
-
-		gocv.PutText(&result, fmt.Sprintf("%s (%.2f%%)", "Posion Oak", primaryConfidences[i]*100),
-			primaries[i].Min.Sub(image.Pt(0, 35)),
-			gocv.FontHersheySimplex, 1, textColor, 4)
-	}
-
-	bufResults := MatToBase64(result)
-	// Send the thumbnail to the user
-	c <- Update{
-		Time:    time.Now(),
-		State:   "results",
-		Message: fmt.Sprintf("%.2f", confidence*100),
-		Data:    bufResults,
-	}
-	// Draw the contours (Black background with green outlines)
-
-	return nil
-
-}
-
-// MatToBase64 converts a gocv matrix into a base64 encoded string
-func MatToBase64(src gocv.Mat) string {
+// matToBase64 converts a gocv matrix into a base64 encoded string
+func matToBase64(src gocv.Mat) string {
 	// Encode the matrix into a jpg
 	encoded, err := gocv.IMEncode(".jpg", src)
 	if err != nil {
@@ -263,4 +346,15 @@ func MatToBase64(src gocv.Mat) string {
 	// Encode the result matrix to the user
 	base64.StdEncoding.Encode(buf, encoded.GetBytes())
 	return string(buf)
+}
+
+// rectCenter gets the center point of an image.Rectangle
+func rectCenter(r1 image.Rectangle) image.Point {
+	return image.Pt(r1.Min.X+r1.Dx()/2, r1.Min.Y+r1.Dy()/2)
+}
+
+// distance gets the distance between the center of two rectangles
+func distance(r1 image.Rectangle, r2 image.Rectangle) float64 {
+	return math.Sqrt(math.Pow(float64(rectCenter(r1).X-rectCenter(r2).X),
+		2) + math.Pow(float64(rectCenter(r1).Y-rectCenter(r2).Y), 2))
 }

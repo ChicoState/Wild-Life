@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-const ScaleFactor = 300
+const ScaleFactor = 255
 
 // ideal since this is what the model expects most of the time
 
@@ -17,7 +17,7 @@ const ImgScale = 640
 
 const NumOut = 6
 
-const MaxConf = 0.82
+const MaxConf = 0.70
 
 var HighlightColor = color.RGBA{G: 255, A: 255}
 

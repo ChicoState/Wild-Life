@@ -2,8 +2,11 @@
 import Loading from "@/components/Loading.vue"
 import {UploadState} from "../upload";
 
-
 interface Result {
+  server: {
+    name: string,
+    hostname: string,
+  }
   upload: {
     name: string
     type: string
@@ -13,6 +16,14 @@ interface Result {
     original: string
     processed: string
   }
+  findings: [
+    {
+      name: string,
+      id: string,
+      confidence: number,
+      samples: number,
+    }
+  ]
 }
 
 
@@ -66,7 +77,7 @@ let props = defineProps<Results>()
           <div class="d-flex flex-column px-3">
             <h3>
               <i class="fa-solid fa-circle-check text-accent label-c5"></i>&nbsp;&nbsp;
-              {{ props.response.progress[props.response.progress.length - 1].state }}
+              {{ props.response.confidence }}
             </h3>
             <div class="label-o3">
               Our scans concluded that there are no obvious signs of poison oak, poison ivy, or similar irritants.
@@ -77,8 +88,9 @@ let props = defineProps<Results>()
     </div>
 
     <div class="d-flex flex-row gap-3">
-      <div :style="`background-image: url('data:image/jpg;base64,${props.response.results}');`"
-           class="preview-upload gap-1">
+      <div
+      >
+        <img :src="`data:image/jpg;base64,${props.response.results}`" class="preview-upload">
         <div v-if="props.response.results === ''"
              class="d-flex justify-content-center align-items-center align-content-center flex-column gap-1"
              style="height: 100%;">Computing
@@ -166,7 +178,6 @@ let props = defineProps<Results>()
 
   border-radius: 0.5rem;
 
-  aspect-ratio: 4/3;
   width: 100%;
   background-size: contain;
   background-position: center;
