@@ -292,7 +292,7 @@ func Process(buffer []byte, client chan Update) error {
 	// Convert the buffer to base64
 	bufResults := matToBase64(result)
 	// Send the final results to the user
-	client <- NewUpdate("results", "", bufResults)
+	client <- NewUpdate("results", fmt.Sprintf("%d Possible Irritants", len(detections)), bufResults)
 	return nil
 }
 

@@ -76,11 +76,16 @@ let props = defineProps<Results>()
                class="image-preview"></div>
           <div class="d-flex flex-column px-3">
             <h3>
-              <i class="fa-solid fa-circle-check text-accent label-c5"></i>&nbsp;&nbsp;
+              <i v-if="props.response.confidence === ''"
+                 class="fa-solid fa-circle-check text-accent label-c5 fa-fw"></i>&nbsp;&nbsp;
+              <i v-else class="fa-solid fa-triangle-exclamation text-orange label-c5"></i>&nbsp;&nbsp;
               {{ props.response.confidence }}
             </h3>
-            <div class="label-o3">
+            <div v-if="props.response.confidence === ''" class="label-o3">
               Our scans concluded that there are no obvious signs of poison oak, poison ivy, or similar irritants.
+            </div>
+            <div>
+              We have identified multiple possible irritants.
             </div>
           </div>
         </div>
@@ -88,8 +93,7 @@ let props = defineProps<Results>()
     </div>
 
     <div class="d-flex flex-row gap-3">
-      <div
-      >
+      <div>
         <img :src="`data:image/jpg;base64,${props.response.results}`" class="preview-upload">
         <div v-if="props.response.results === ''"
              class="d-flex justify-content-center align-items-center align-content-center flex-column gap-1"
@@ -101,16 +105,13 @@ let props = defineProps<Results>()
       <div class="d-flex flex-lg-row flex-column flex-wrap gap-4">
 
         <div class="sidebar">
-          <div class="subtitle">Processing</div>
-          <div v-for="(state) in props.response.progress" class="pair">
-            <div class="key-pair">{{ state.state }}</div>
-            <div class="value-pair">done</div>
-          </div>
-          <div class="subtitle mt-4">Confidence</div>
+
+          <div class="subtitle">Confidence</div>
           <div class="pair">
             <div class="key-pair">Irritants Found</div>
-            <div class="value-pair">{{ props.response.confidence }}%</div>
+            <div class="value-pair">{{ props.response.confidence }}</div>
           </div>
+          <div class="subtitle mt-3">Upload</div>
           <div class="pair">
             <div class="key-pair">name</div>
             <div class="value-pair">{{ props.response.name }}</div>
@@ -183,8 +184,7 @@ let props = defineProps<Results>()
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .pair {
@@ -209,7 +209,7 @@ let props = defineProps<Results>()
   max-width: 100%;
   font-weight: 400;
   font-size: 0.9rem;
-  font-family: "Roboto", serif;
+
   overflow: clip !important;
   text-overflow: ellipsis !important;
   color: rgba(255, 255, 255, 0.4);
