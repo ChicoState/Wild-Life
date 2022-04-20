@@ -44,7 +44,7 @@ export class Upload {
     restURL(): string {
         let url = `http://localhost:5069/upload`
         if (env.VITE_ENDPOINT || env.ENDPOINT || env.PROD || env.VITE_PROD) {
-            url = `https://${env.VITE_ENDPOINT}/api/upload`
+            url = `https://wildlife.bradenn.com/api/upload`
         }
         return url
     }
@@ -53,7 +53,7 @@ export class Upload {
     socketURL(): string {
         let url = `ws://localhost:5069/sockets/${this.token}`
         if (env.VITE_ENDPOINT || env.ENDPOINT || env.PROD || env.VITE_PROD) {
-            url = `wss://${env.VITE_ENDPOINT}/api/sockets/${this.token}`
+            url = `wss://wildlife.bradenn.com/api/sockets/${this.token}`
         }
         return url
     }
