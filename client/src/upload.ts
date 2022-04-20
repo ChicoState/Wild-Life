@@ -43,7 +43,7 @@ export class Upload {
     // Returns the relevant rest endpoint url
     restURL(): string {
         let url = `http://localhost:5069/upload`
-        if (env.VITE_ENDPOINT) {
+        if (env.VITE_ENDPOINT || env.ENDPOINT || env.PROD || env.VITE_PROD) {
             url = `https://${env.VITE_ENDPOINT}/api/upload`
         }
         return url
@@ -52,7 +52,7 @@ export class Upload {
     // Returns the relevant websocket endpoint url
     socketURL(): string {
         let url = `ws://localhost:5069/sockets/${this.token}`
-        if (env.VITE_ENDPOINT) {
+        if (env.VITE_ENDPOINT || env.ENDPOINT || env.PROD || env.VITE_PROD) {
             url = `wss://${env.VITE_ENDPOINT}/api/sockets/${this.token}`
         }
         return url
