@@ -16,7 +16,7 @@ export interface Detection {
     confidence: number;
     boxes: Rectangle[];
     confidences: number[];
-    types: string
+    type: string
 }
 
 export interface fileType {

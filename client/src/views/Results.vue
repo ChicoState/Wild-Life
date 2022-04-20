@@ -110,7 +110,8 @@ let state = reactive({})
 
           <div class="subtitle">Detections</div>
           <div class="shadow-box">
-            <div v-for="d in props.response.detections.sort((a, b) => b.confidence - a.confidence).slice(0, 4)">
+            <div
+                v-for="(d: Detection) in props.response.detections.sort((a, b) => b.confidence - a.confidence).slice(0, 4)">
               <div class="card py-2 px-2 my-1 d-flex justify-content-between ">
                 <div class="label-c4">{{ d.type }}</div>
                 <div class="label-c4 label-o3">{{ Math.round(d.confidence * 1000) / 10 }}%</div>
