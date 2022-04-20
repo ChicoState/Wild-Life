@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"gocv.io/x/gocv"
@@ -70,13 +71,14 @@ func (l *LeafProcess) Run(c chan Update) error {
 }
 
 type Detection struct {
-	bounds      image.Rectangle
-	confidence  float64
-	boxes       []image.Rectangle
-	confidences []float64
+	Bounds      image.Rectangle   `json:"bounds"`
+	Confidence  float64           `json:"confidence"`
+	Boxes       []image.Rectangle `json:"boxes"`
+	Confidences []float64         `json:"confidences"`
+	Type        string            `json:"type"`
 }
 
-// aggregateBoxes combines duplicated boxes, and boxes mostly overlapping
+// aggregateBoxes combines duplicated Boxes, and Boxes mostly overlapping
 func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection, error) {
 	var candidates []Detection
 	// Iterate through all the detections
@@ -85,16 +87,16 @@ func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection
 		boxAvg := float64(box.Dx()+box.Dy()) / 2.0
 		// Iterate through existing candidates to see if any of them share a similar disposition
 		for _, candidate := range candidates {
-			candidateAvg := float64(candidate.bounds.Dx()+candidate.bounds.Dy()) / 2.0
+			candidateAvg := float64(candidate.Bounds.Dx()+candidate.Bounds.Dy()) / 2.0
 			// Calculate the threshold for how far the box should be before it is grouped
 			groupingThreshold := ((boxAvg + candidateAvg) / 2.0) / 2.0
-			if distance(candidate.bounds, box) <= groupingThreshold {
-				// Create a new box containing both boxes
-				candidate.bounds = candidate.bounds.Union(box)
+			if distance(candidate.Bounds, box) <= groupingThreshold {
+				// Create a new box containing both Boxes
+				candidate.Bounds = candidate.Bounds.Union(box)
 				// Add the current box to the subarray within the detection
-				candidate.boxes = append(candidate.boxes, box)
-				// Similarly, mark the confidences
-				candidate.confidences = append(candidate.confidences, confidences[i])
+				candidate.Boxes = append(candidate.Boxes, box)
+				// Similarly, mark the Confidences
+				candidate.Confidences = append(candidate.Confidences, confidences[i])
 				// Since this box was assimilated into an existing candidate,
 				// we don't want to add it to the candidates again.
 				assimilated = true
@@ -106,27 +108,28 @@ func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection
 		if !assimilated {
 			// If the box is virgin, we will initialize a detection struct for it
 			detection := Detection{
-				bounds:      box,
-				boxes:       []image.Rectangle{},
-				confidences: confidences,
-				confidence:  confidences[i],
+				Bounds:      box,
+				Boxes:       []image.Rectangle{},
+				Confidences: confidences,
+				Confidence:  confidences[i],
+				Type:        "Poison Oak",
 			}
 			// Add the box to the candidates array
 			candidates = append(candidates, detection)
 		}
 	}
-	// Generate the average confidence based on the confidences from the above steps
+	// Generate the average Confidence based on the Confidences from the above steps
 	// Iterate through all candidates allocated in the above steps
 	for _, candidate := range candidates {
-		// Initialize a variable with the confidence of the first detection
-		sum := candidate.confidence
-		// Iterate through each child confidence
-		for _, confidence := range candidate.confidences {
-			// Add it to the confidence sum
+		// Initialize a variable with the Confidence of the first detection
+		sum := candidate.Confidence
+		// Iterate through each child Confidence
+		for _, confidence := range candidate.Confidences {
+			// Add it to the Confidence sum
 			sum += confidence
 		}
-		// Set the detection level confidence to the average of the grouped confidences, plus the original
-		candidate.confidence = sum / float64(len(candidate.confidences))
+		// Set the detection level Confidence to the average of the grouped Confidences, plus the original
+		candidate.Confidence = sum / float64(len(candidate.Confidences))
 	}
 	return candidates, nil
 }
@@ -149,7 +152,7 @@ func drawDetections(mat *gocv.Mat, detections []Detection) error {
 	gocv.GaussianBlur(dimmed, &dimmed, image.Point{}, blurRadius, blurRadius, gocv.BorderReflect)
 	// Draw the mask of each detection
 	for _, detection := range detections {
-		gocv.Rectangle(&mask, detection.bounds, textColor, -1)
+		gocv.Rectangle(&mask, detection.Bounds, textColor, -1)
 	}
 	// Create a version of mat where only the detections are visible
 	gocv.BitwiseAnd(*mat, mask, mat)
@@ -163,7 +166,7 @@ func drawDetections(mat *gocv.Mat, detections []Detection) error {
 	// Iterate through each detection
 	for _, detection := range detections {
 		// Define a local variable for readability
-		detection.bounds = detection.bounds.Add(image.Pt(4, 4))
+		detection.Bounds = detection.Bounds.Add(image.Pt(4, 4))
 		err := drawDetectionCorners(mat, detection, color.RGBA{
 			R: 0,
 			G: 0,
@@ -173,7 +176,7 @@ func drawDetections(mat *gocv.Mat, detections []Detection) error {
 		if err != nil {
 			return err
 		}
-		detection.bounds = detection.bounds.Sub(image.Pt(4, 4))
+		detection.Bounds = detection.Bounds.Sub(image.Pt(4, 4))
 		err = drawDetectionCorners(mat, detection, textColor)
 		if err != nil {
 			return err
@@ -186,8 +189,8 @@ func drawDetections(mat *gocv.Mat, detections []Detection) error {
 
 // drawDetectionCorners draws the lines at the corners of a detection and a cross-hair in the middle
 func drawDetectionCorners(mat *gocv.Mat, detection Detection, clr color.RGBA) error {
-	// Define a local instance of the bounds rectangle
-	rect := detection.bounds
+	// Define a local instance of the Bounds rectangle
+	rect := detection.Bounds
 	// Define an inset distance variable
 	const insetDistance = -10
 	// Create the inset rect to make the corners appear to have depth
@@ -196,7 +199,7 @@ func drawDetectionCorners(mat *gocv.Mat, detection Detection, clr color.RGBA) er
 	w := insetRect.Dx()
 	h := insetRect.Dy()
 	// Find the center point
-	center := image.Pt(insetRect.Min.X+w/2, insetRect.Min.Y+h/2)
+	center := rectCenter(insetRect)
 	// Define the four corners of the detection area
 	corners := [4]image.Point{
 		// Bottom Right
@@ -235,9 +238,9 @@ func drawDetectionCorners(mat *gocv.Mat, detection Detection, clr color.RGBA) er
 	const fontScale = 1.3
 	const fontThickness = 2
 	// Get text metrics for dynamically rendered text
-	textDimensions := gocv.GetTextSize(fmt.Sprintf("%.2f%%", detection.confidence*100), gocv.FontHersheyDuplex, fontScale, fontThickness)
+	textDimensions := gocv.GetTextSize(fmt.Sprintf("%.2f%%", detection.Confidence*100), gocv.FontHersheyDuplex, fontScale, fontThickness)
 	// Draw the offset text
-	gocv.PutText(mat, fmt.Sprintf("%.2f%%", detection.confidence*100),
+	gocv.PutText(mat, fmt.Sprintf("%.2f%%", detection.Confidence*100),
 		rect.Min.Add(image.Pt(rect.Dx()-textDimensions.X, textDimensions.Y)).Add(image.Pt(-16, 16)),
 		gocv.FontHersheyDuplex, fontScale,
 		clr, fontThickness)
@@ -291,8 +294,14 @@ func Process(buffer []byte, client chan Update) error {
 	}
 	// Convert the buffer to base64
 	bufResults := matToBase64(result)
+
+	marshal, err := json.Marshal(detections)
+	if err != nil {
+		return err
+	}
+
 	// Send the final results to the user
-	client <- NewUpdate("results", fmt.Sprintf("%d Possible Irritants", len(detections)), bufResults)
+	client <- NewUpdate("results", string(marshal), bufResults)
 	return nil
 }
 

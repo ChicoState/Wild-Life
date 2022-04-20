@@ -9,7 +9,7 @@ import (
 	"wildlife/internal/server/tensor"
 )
 
-const VERSION = "0.1.2"
+const VERSION = "0.1.4"
 const OnnxModel = "assets/poisonOak.onnx"
 
 func main() {

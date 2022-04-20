@@ -1,5 +1,24 @@
 import {Buffer} from "buffer";
 
+export interface Rectangle {
+    Min: {
+        X: number,
+        Y: number,
+        Max: {
+            X: number,
+            Y: number
+        }
+    }
+}
+
+export interface Detection {
+    bounds: Rectangle;
+    confidence: number;
+    boxes: Rectangle[];
+    confidences: number[];
+    types: string
+}
+
 export interface fileType {
     id: string;
     name: string;

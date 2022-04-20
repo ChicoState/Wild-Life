@@ -1,29 +1,21 @@
 <script lang="ts" setup>
 import Loading from "@/components/Loading.vue"
 import {UploadState} from "../upload";
+import {reactive} from "vue";
+import type {Detection} from "../types";
 
 interface Result {
-  server: {
-    name: string,
-    hostname: string,
-  }
-  upload: {
-    name: string
-    type: string
-    size: number
-  }
-  thumbnails: {
-    original: string
-    processed: string
-  }
-  findings: [
-    {
-      name: string,
-      id: string,
-      confidence: number,
-      samples: number,
-    }
-  ]
+  name: string,
+  size: number,
+  thumbnail: string,
+  type: string,
+  threshold: string,
+  highlight: string,
+  results: string,
+  confidence: string,
+  detections: Detection[],
+  progress: UploadState[],
+  token: string,
 }
 
 
@@ -31,12 +23,13 @@ interface Results {
   response: {
     name: string,
     size: number,
-    type: string,
     thumbnail: string,
+    type: string,
     threshold: string,
     highlight: string,
     results: string,
     confidence: string,
+    detections: Detection[],
     progress: UploadState[],
     token: string,
   },
@@ -65,6 +58,8 @@ const target = [
 
 let props = defineProps<Results>()
 
+let state = reactive({})
+
 </script>
 
 <template>
@@ -75,17 +70,22 @@ let props = defineProps<Results>()
           <div :style="`background-image: url('data:image/jpg;base64,${props.response.thumbnail}');`"
                class="image-preview"></div>
           <div class="d-flex flex-column px-3">
-            <h3>
-              <i v-if="props.response.confidence === ''"
-                 class="fa-solid fa-circle-check text-accent label-c5 fa-fw"></i>&nbsp;&nbsp;
-              <i v-else class="fa-solid fa-triangle-exclamation text-orange label-c5"></i>&nbsp;&nbsp;
-              {{ props.response.confidence }}
+            <h3 class="mb-0">
+              <span v-if="props.response.detections.length === 0">
+                <i class="fa-solid fa-circle-check text-accent label-c5 fa-fw"></i>&nbsp;&nbsp;Low irritation
+              </span>
+              <span v-else>
+                <i class="fa-solid fa-triangle-exclamation text-orange label-c5"></i>&nbsp;&nbsp;{{ props.response.detections.length }} Irritants Detected
+              </span>
+
             </h3>
-            <div v-if="props.response.confidence === ''" class="label-o3">
-              Our scans concluded that there are no obvious signs of poison oak, poison ivy, or similar irritants.
-            </div>
             <div>
-              We have identified multiple possible irritants.
+              <div v-if="props.response.detections.length === 0 " class="label-o3 label-c4">
+                Our scans concluded that there are no obvious signs of poison oak, poison ivy, or similar irritants.
+              </div>
+              <div v-else class="label-o3 label-c4">
+                We have identified multiple possible irritants.
+              </div>
             </div>
           </div>
         </div>
@@ -93,10 +93,12 @@ let props = defineProps<Results>()
     </div>
 
     <div class="d-flex flex-row gap-3">
-      <div>
-        <img :src="`data:image/jpg;base64,${props.response.results}`" class="preview-upload">
-        <div v-if="props.response.results === ''"
-             class="d-flex justify-content-center align-items-center align-content-center flex-column gap-1"
+
+      <div class="flex-grow-1">
+        <img v-if="props.response.results !== ''" :src="`data:image/jpg;base64,${props.response.results}`" alt="results"
+             class="preview-upload"/>
+        <div v-else
+             class="d-flex card justify-content-center align-items-center align-content-center flex-column gap-1"
              style="height: 100%;">Computing
           <Loading></Loading>
         </div>
@@ -106,9 +108,22 @@ let props = defineProps<Results>()
 
         <div class="sidebar">
 
-          <div class="subtitle">Confidence</div>
+          <div class="subtitle">Detections</div>
+          <div class="shadow-box">
+            <div v-for="d in props.response.detections.sort((a, b) => b.confidence - a.confidence).slice(0, 4)">
+              <div class="card py-2 px-2 my-1 d-flex justify-content-between ">
+                <div class="label-c4">{{ d.type }}</div>
+                <div class="label-c4 label-o3">{{ Math.round(d.confidence * 1000) / 10 }}%</div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <div></div>
+              <div v-if="props.response.detections.length > 4" class="text-accent label-c3 px-2">+
+                {{ props.response.detections.length - 4 }} more
+              </div>
+            </div>
+          </div>
           <div class="pair">
-            <div class="key-pair">Irritants Found</div>
             <div class="value-pair">{{ props.response.confidence }}</div>
           </div>
           <div class="subtitle mt-3">Upload</div>
@@ -121,7 +136,7 @@ let props = defineProps<Results>()
             <div class="value-pair">{{ props.response.type }}</div>
           </div>
           <div class="pair">
-            <div class="key-pair">type</div>
+            <div class="key-pair">size</div>
             <div class="value-pair">{{ Math.round(props.response.size / 1000 / 1000 * 100) / 100 }}MB</div>
           </div>
         </div>
@@ -131,6 +146,9 @@ let props = defineProps<Results>()
 
 </template>
 <style lang="scss" scoped>
+.shadow-box {
+
+}
 
 .sidebar {
   padding: 1rem;
@@ -185,14 +203,26 @@ let props = defineProps<Results>()
   background-repeat: no-repeat;
   background-color: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: loadIn 200ms ease-out forwards;
+}
+
+@keyframes loadIn {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .pair {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.125);
-  padding: 0.5rem 0.5rem;
+
+  padding: 0.2rem 0.2rem;
 }
 
 .pair:nth-last-of-type(1) {

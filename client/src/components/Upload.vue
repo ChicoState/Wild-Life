@@ -3,6 +3,7 @@ import {inject, reactive} from 'vue';
 import {Upload, UploadState} from '../upload';
 import Results from "../views/Results.vue";
 import Loading from "./Loading.vue";
+import {Detection} from "../types";
 
 
 interface UploadProps {
@@ -19,6 +20,7 @@ interface UploadProps {
     highlight: string,
     results: string,
     confidence: string,
+    detections: Detection[],
     progress: UploadState[],
     token: string,
   },
@@ -37,6 +39,7 @@ let state = reactive<UploadProps>({
     highlight: "",
     results: "",
     confidence: "",
+    detections: [] as Detection[],
     progress: [] as UploadState[],
     token: "",
   },
@@ -65,7 +68,9 @@ function updateStatus(up: UploadState) {
       break
     case "results":
       state.response.results = up.data
-      state.response.confidence = up.message
+      let proto = JSON.parse(up.message)
+      if (!proto) return
+      state.response.detections = proto as Detection[]
       state.context = true
       break
   }
@@ -82,6 +87,7 @@ function reset() {
     results: "",
     confidence: "",
     progress: [] as UploadState[],
+    detections: [] as Detection[],
     token: "",
   }
 }
@@ -117,7 +123,14 @@ function uploadFile(event: any) {
 
   <div id="content-mobile">
     <span v-if="state.error">{{ state.error }}</span>
-    <div class="d-flex flex-column">
+    <div v-if="state.context" class="">
+      <a class="text-accent" href="#" @click="state.context = false"><i class="fas fa-chevron-left label-o4"
+                                                                        style="text-decoration: none;">&nbsp;</i>Done
+      </a>
+      <h2 class="my-1">Upload Status</h2>
+      <Results :response="state.response"></Results>
+    </div>
+    <div v-else class="d-flex flex-column">
       <h2>Upload An Image</h2>
       <div class="d-flex justify-content-between gap-0">
         <div class="flex-shrink-0">
@@ -142,10 +155,7 @@ function uploadFile(event: any) {
         </div>
 
       </div>
-      <div v-if="state.context" class="" @mousedown="state.context = false">
-        <div class="h-sep"></div>
-        <Results :response="state.response"></Results>
-      </div>
+
     </div>
 
   </div>
