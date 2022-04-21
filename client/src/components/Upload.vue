@@ -122,7 +122,7 @@ function uploadFile(event: any) {
 <template>
 
   <div id="content-mobile">
-<!--    <span v-if="state.error">{{ state.error }}</span>-->
+    <span v-if="state.error">{{ state.error }}</span>
     <div v-if="state.context" class="">
       <a class="text-accent" href="#" @click="state.context = false"><i class="fas fa-chevron-left label-o4"
                                                                         style="text-decoration: none;">&nbsp;</i>Done
