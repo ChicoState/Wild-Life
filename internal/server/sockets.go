@@ -1,11 +1,10 @@
 package server
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"net/http"
-	"wildlife/internal/log"
 	"wildlife/internal/server/orchestrator"
 )
 
@@ -31,21 +30,24 @@ func connectWebsockets(writer http.ResponseWriter, request *http.Request) {
 	// Upgrade the https session to a web socket session
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		log.Errf("Socket Error: %s", err)
+		http.Error(writer, "failed to initiate websocket session", http.StatusBadRequest)
 		return
 	}
 	defer conn.Close()
 
 	token := chi.URLParam(request, "token")
-
-	rx, err := orchestrator.Connect(token)
+	uuidParse, err := uuid.Parse(token)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(writer, "no token was provided", http.StatusBadRequest)
+		return
+	}
+	rx, err := orchestrator.Connect(uuidParse)
+	if err != nil {
+		http.Error(writer, "could not find active job with that token", http.StatusNotFound)
 		return
 	}
 
 	for update := range rx {
-		fmt.Printf("[rx] %s\n", update.State)
 		err = conn.WriteJSON(update)
 		if err != nil {
 			continue

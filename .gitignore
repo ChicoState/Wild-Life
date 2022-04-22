@@ -29,5 +29,6 @@ doc/api/
 .env
 .DS_Store
 node_modules/
+client/coverage/
 dist/
 wildlife         # Binary file

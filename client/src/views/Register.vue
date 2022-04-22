@@ -3,7 +3,8 @@
 </script>
 
 <template>
-  <div class="d-flex justify-content-center">
+
+  <div class="d-flex justify-content-center results-context" @click.stop>
     <div class="col-12 col-md-8 col-lg-5">
       <h2 class="header">Registration</h2>
       <div class="card d-flex flex-column gap-4">

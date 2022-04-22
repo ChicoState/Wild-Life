@@ -41,7 +41,7 @@ function clear() {
   </div>
 </template>
 
-<style scoped>
+<style>
 .image {
   border-radius: 0.5rem;
   padding: 0.5rem;
@@ -51,7 +51,7 @@ function clear() {
   display: flex;
   justify-content: start;
   flex-direction: row;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .image-desc {
@@ -70,7 +70,8 @@ function clear() {
   aspect-ratio: 4/3;
   background-size: cover;
   background-position: center;
-  height: 8rem;
+  border-radius: 0.25rem;
+  height: 7.5rem;
 }
 
 .clear_btn {
