@@ -1,21 +1,20 @@
 package tensor
 
 import (
-	"gocv.io/x/gocv"
 	"image"
 	"image/color"
 	"math"
+
+	"gocv.io/x/gocv"
 )
 
 const ScaleFactor = 255
 
 // ideal since this is what the model expects most of the time
 
+const DefaultOut = 5
+
 const ImgScale = 640
-
-// [1 25200 6] index 2 is the number of expected outputs
-
-const NumOut = 6
 
 const MaxConf = 0.70
 
@@ -71,7 +70,8 @@ func Detect(img gocv.Mat) (ids []int64, confidences []float64, boxes []image.Rec
 	res := Net.Forward("")
 	// get number of outputs according to the shape [1 25200 6]
 	// we care about index 1 of the shape
-	outs := res.Total() / NumOut
+	numOut := res.Size()[2]
+	outs := res.Total() / numOut
 	// get the scale factor required to convert the output to the original image size
 	xFactor := float64(img.Cols()) / float64(ImgScale)
 	yFactor := float64(img.Rows()) / float64(ImgScale)
@@ -82,7 +82,16 @@ func Detect(img gocv.Mat) (ids []int64, confidences []float64, boxes []image.Rec
 			confidence := float64(res.GetFloatAt3(0, i, 4))
 			if confidence > MaxConf {
 				// turn into gocv.Mat
-				classId := 0
+				id_len := numOut - DefaultOut
+				var id int64 = 0
+				conf_id := 0.0
+				for j := 0; j < id_len; j++ {
+					val := float64(res.GetFloatAt3(0, i, DefaultOut+j))
+					if val > conf_id {
+						id = int64(j)
+						conf_id = val
+					}
+				}
 				// pulls coords from the blob
 				x := float64(res.GetFloatAt3(0, i, 0))
 				y := float64(res.GetFloatAt3(0, i, 1))
@@ -96,7 +105,7 @@ func Detect(img gocv.Mat) (ids []int64, confidences []float64, boxes []image.Rec
 				// append items to each slice
 				box := image.Rect(left, top, right, bottom)
 				boxes = append(boxes, box)
-				ids = append(ids, int64(classId))
+				ids = append(ids, int64(id))
 				confidences = append(confidences, confidence)
 			}
 		}

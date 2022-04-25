@@ -25,13 +25,22 @@ function clear() {
           </div>
           <div class="image-desc d-flex flex-column justify-content-between">
             <div class="label-c4 label-o4 overflow-ellipse">{{ file.name }}</div>
-            <div class="label-c4 label-o4">
-              <i class="fa-solid fa-triangle-exclamation" style="color: #ffc400;"></i>
-              Irritants detected
+            <div v-if="file.confidence > 0.7">
+              <div class="label-c4 label-o4">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #ffc400;"></i>
+                Irritants detected
+              </div>
+            </div>
+            <div v-else>
+              <div class="label-c4 label-o4">
+                <i class="fa-solid fa-check" style="color: #00c853;"></i>
+                No irritants
+              </div>
             </div>
             <div class="label-c4 label-o4"><i class="fa-solid fa-magnifying-glass" style="text-align:right;"></i>
+            {{ file.result }}
             </div>
-            <div class="label-c4 label-o3"> {{ file.confidence || Math.round(Math.random() * 1000) / 10 }}%
+            <div class="label-c4 label-o3"> {{ ((file.confidence * 100) || 0).toPrecision(4) }}%
               confidence
             </div>
           </div>
