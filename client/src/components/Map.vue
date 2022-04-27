@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { LongLat } from '../map';
-let center = ref([40, 40]);
+let center = ref([-121.837479, 39.728493])
 const projection = ref('EPSG:4326')
 const zoom = ref(8)
 const rotation = ref(0)
