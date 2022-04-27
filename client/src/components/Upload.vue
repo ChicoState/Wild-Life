@@ -5,7 +5,6 @@ import Results from "../views/Results.vue";
 import Loading from "./Loading.vue";
 import {Detection} from "../types";
 import { v4 as uuid } from 'uuid';
-import { file } from '@babel/types';
 
 
 interface UploadProps {
