@@ -74,14 +74,14 @@ func (l *LeafProcess) Run(c chan Update) error {
 type Detection struct {
 	Bounds      image.Rectangle   `json:"bounds"`
 	Confidence  float64           `json:"confidence"`
-	Classes     []int64           `json:"classes"`
+	Classes     []int             `json:"classes"`
 	Boxes       []image.Rectangle `json:"boxes"`
 	Confidences []float64         `json:"confidences"`
 	Type        string            `json:"type"`
 }
 
 // aggregateBoxes combines duplicated Boxes, and Boxes mostly overlapping
-func aggregateBoxes(ids []int64, boxes []image.Rectangle, confidences []float64) ([]Detection, error) {
+func aggregateBoxes(ids []int, boxes []image.Rectangle, confidences []float64) ([]Detection, error) {
 	var candidates []Detection
 	// Iterate through all the detections
 	for i, box := range boxes {
@@ -113,7 +113,7 @@ func aggregateBoxes(ids []int64, boxes []image.Rectangle, confidences []float64)
 			detection := Detection{
 				Bounds:      box,
 				Boxes:       []image.Rectangle{},
-				Classes:     []int64{},
+				Classes:     []int{},
 				Confidences: confidences,
 				Confidence:  confidences[i],
 				Type:        tensor.ClassNames[ids[i]],

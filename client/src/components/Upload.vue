@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {inject, reactive} from 'vue';
 import {Upload, UploadState} from '../upload';
+import type Result from "../views/Results.vue";
 import Results from "../views/Results.vue";
 import Loading from "./Loading.vue";
 import {Detection} from "../types";
@@ -12,20 +13,7 @@ interface UploadProps {
   waiting: boolean
   context: boolean,
   error: any,
-  response: {
-    id: string,
-    name: string,
-    size: number,
-    thumbnail: string,
-    type: string,
-    threshold: string,
-    highlight: string,
-    results: string,
-    confidence: string,
-    detections: Detection[],
-    progress: UploadState[],
-    token: string,
-  },
+  response: any,
 }
 
 const ClassNames = ["Poison Oak", "Mature Poison Oak", "Young Poison Oak"]
@@ -160,7 +148,7 @@ function uploadFile(event: any) {
                                                                         style="text-decoration: none;">&nbsp;</i>Done
       </a>
       <h2 class="my-1">Upload Status</h2>
-      <Results :response="state.response"></Results>
+      <Results :response="(state.response)"></Results>
     </div>
     <div v-else class="d-flex flex-column">
       <h2>Upload An Image</h2>

@@ -58,7 +58,7 @@ func formatYoloV5(img gocv.Mat) (out gocv.Mat) {
 }
 
 // Detect returns class ids, confidences, and bounding boxes of the image after being processed by the network
-func Detect(img gocv.Mat) (ids []int64, confidences []float64, boxes []image.Rectangle) {
+func Detect(img gocv.Mat) (ids []int, confidences []float64, boxes []image.Rectangle) {
 	input := formatYoloV5(img)
 	defer input.Close()
 	// input_image is turned into a blob
@@ -105,7 +105,7 @@ func Detect(img gocv.Mat) (ids []int64, confidences []float64, boxes []image.Rec
 				// append items to each slice
 				box := image.Rect(left, top, right, bottom)
 				boxes = append(boxes, box)
-				ids = append(ids, int64(id))
+				ids = append(ids, int(id))
 				confidences = append(confidences, confidence)
 			}
 		}
