@@ -14,6 +14,7 @@ export interface Rectangle {
 export interface Detection {
     bounds: Rectangle;
     confidence: number;
+    classes: number[],
     boxes: Rectangle[];
     confidences: number[];
     type: string
