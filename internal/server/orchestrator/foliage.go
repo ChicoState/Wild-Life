@@ -4,14 +4,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"gocv.io/x/gocv"
 	"image"
 	"image/color"
 	"math"
 	"time"
 	"wildlife/internal/log"
 	"wildlife/internal/server/tensor"
+
+	"github.com/google/uuid"
+	"gocv.io/x/gocv"
 )
 
 func init() {
@@ -73,13 +74,14 @@ func (l *LeafProcess) Run(c chan Update) error {
 type Detection struct {
 	Bounds      image.Rectangle   `json:"bounds"`
 	Confidence  float64           `json:"confidence"`
+	Classes     []int             `json:"classes"`
 	Boxes       []image.Rectangle `json:"boxes"`
 	Confidences []float64         `json:"confidences"`
 	Type        string            `json:"type"`
 }
 
 // aggregateBoxes combines duplicated Boxes, and Boxes mostly overlapping
-func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection, error) {
+func aggregateBoxes(ids []int, boxes []image.Rectangle, confidences []float64) ([]Detection, error) {
 	var candidates []Detection
 	// Iterate through all the detections
 	for i, box := range boxes {
@@ -97,6 +99,7 @@ func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection
 				candidate.Boxes = append(candidate.Boxes, box)
 				// Similarly, mark the Confidences
 				candidate.Confidences = append(candidate.Confidences, confidences[i])
+				candidate.Classes = append(candidate.Classes, ids[i])
 				// Since this box was assimilated into an existing candidate,
 				// we don't want to add it to the candidates again.
 				assimilated = true
@@ -110,9 +113,10 @@ func aggregateBoxes(boxes []image.Rectangle, confidences []float64) ([]Detection
 			detection := Detection{
 				Bounds:      box,
 				Boxes:       []image.Rectangle{},
+				Classes:     []int{},
 				Confidences: confidences,
 				Confidence:  confidences[i],
-				Type:        "Poison Oak",
+				Type:        tensor.ClassNames[ids[i]],
 			}
 			// Add the box to the candidates array
 			candidates = append(candidates, detection)
@@ -279,11 +283,11 @@ func Process(buffer []byte, client chan Update) error {
 		return err
 	}
 	// Run the detection model on the upload
-	_, confidences, boxes := tensor.Detect(result)
+	ids, confidences, boxes := tensor.Detect(result)
 	// Update the user that the model has run
 	client <- NewUpdate("compiling", "", nil)
 	// Aggregate all the detections into a few mains ones
-	detections, err := aggregateBoxes(boxes, confidences)
+	detections, err := aggregateBoxes(ids, boxes, confidences)
 	if err != nil {
 		return err
 	}

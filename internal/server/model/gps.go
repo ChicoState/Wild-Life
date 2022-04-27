@@ -4,3 +4,4 @@ type GPS struct{
 	Lognitude float64 `gorm:"type:float"`
 	Latitude float64 `gorm:"type:float"`
 }
+

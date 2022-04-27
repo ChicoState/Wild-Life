@@ -12,6 +12,9 @@ import History from "@/components/History.vue"
       <History></History>
     </div>
   </div>
+  <div class="flex-grow-1">
+    <Map></Map>
+  </div>
 </template>
 <style scoped>
 </style>

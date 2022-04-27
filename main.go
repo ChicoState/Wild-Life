@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// Initialize the CNN model
-	err = tensor.BuildModel(OnnxModel, false)
+	err = tensor.BuildModel(OnnxModel, true)
 	if err != nil {
 		log.Errf("Onnx Model initialization failed: %s", err)
 		return
