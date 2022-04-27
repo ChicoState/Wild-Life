@@ -1,11 +1,9 @@
 <script lang="ts" setup>
 import Upload from '@/components/Upload.vue'
 import History from "@/components/History.vue"
-import Map from "@/components/Map.vue"
 </script>
 
 <template>
-
   <div>
     <div class="flex-grow-1">
       <Upload></Upload>
@@ -19,5 +17,4 @@ import Map from "@/components/Map.vue"
   </div>
 </template>
 <style scoped>
-
 </style>

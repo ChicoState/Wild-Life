@@ -154,11 +154,14 @@ function uploadFile(event: any) {
       <h2>Upload An Image</h2>
       <div class="d-flex justify-content-between gap-0">
         <div class="flex-shrink-0">
-          <label class="custom-file-upload button">
-            <input id="camera" accept="image/png,image/jpeg" capture="user" class="button" type="file"
-                   @change="uploadFile">
-            <i class="fa-solid fa-camera" style="text-align: center;"></i>
-          </label>
+          <div class = "d-block d-sm-block d-md-block d-lg-none">
+            <label class="custom-file-upload button">
+              <input id="camera" accept="image/png,image/jpeg" capture="environment
+              " class="button" type="file"
+                    @change="uploadFile">
+              <i class="fa-solid fa-camera" style="text-align: center;"></i>
+            </label>
+          </div>
         </div>
         <div class="flex-grow-1">
           <label class="custom-file-upload button">
@@ -173,13 +176,9 @@ function uploadFile(event: any) {
             </span>
           </label>
         </div>
-
       </div>
-
     </div>
-
   </div>
-
 </template>
 
 <style scoped>
@@ -211,9 +210,7 @@ input[type="file"] {
 
 .child {
   display: inline-block;
-
   padding: 2px;
-
 }
 
 </style>

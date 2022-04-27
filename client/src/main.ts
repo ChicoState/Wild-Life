@@ -10,3 +10,4 @@ let app = createApp(App)
 app.use(router)
 app.use(OpenLayersMap)
 app.mount('#app')
+

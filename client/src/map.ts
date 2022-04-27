@@ -5,4 +5,3 @@ export class LongLat {
         this.lat = lat
         this.lng = lng
     }
-}
