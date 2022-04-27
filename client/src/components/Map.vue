@@ -10,10 +10,9 @@ let state = reactive({
     rotation: 0
 })
 
-function success(pos: any){
-    console.log(pos.coords)
-    state.center[0] = pos.coords.lng
-    state.center[1] = pos.coords.lat
+function success(pos: GeolocationPosition){
+    state.center[0] = pos.coords.longitude
+    state.center[1] = pos.coords.latitude
     //update ol-view
 }
 const error = (err: any) => {
