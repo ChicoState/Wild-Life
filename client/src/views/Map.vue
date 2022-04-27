@@ -18,7 +18,7 @@ function success(pos: GeolocationPosition){
 const error = (err: any) => {
     console.warn(`ERROR(${err.code}): ${err.message}`);
 }
-
+//Gets random range of numbers for area, can be used later to get user data.
 const getRandomInRange = (from, to, fixed) => {
     return (Math.random() * (to - from) + from).toFixed(fixed) * 1;
 }
@@ -38,9 +38,6 @@ onMounted(() => {
         console.log("Geolocation is not supported by this browser.");
     }
 })
-
-
-//Gets random range of numbers for area, can be used later to get user data.
 
 </script>
 <template>
