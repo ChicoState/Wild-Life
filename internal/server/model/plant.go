@@ -1,4 +1,4 @@
-package Model
+package model
 type Plant struct {
 	ID string `gorm:"primaryKey;not null; type:varchar(36)"`
 	Gps GPS `gorm: "foreignKey::GpsID"`
