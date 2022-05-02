@@ -156,8 +156,7 @@ function uploadFile(event: any) {
         <div class="flex-shrink-0">
           <div class = "d-block d-sm-block d-md-block d-lg-none">
             <label class="custom-file-upload button">
-              <input id="camera" accept="image/png,image/jpeg" capture="environment
-              " class="button" type="file"
+              <input id="camera" accept="image/png,image/jpeg" capture="environment" class="button" type="file"
                     @change="uploadFile">
               <i class="fa-solid fa-camera" style="text-align: center;"></i>
             </label>

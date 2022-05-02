@@ -4,7 +4,7 @@ import { string } from 'yargs';
 import { LongLat } from '../map';
 
 let state = reactive({
-    center: [-121,49],
+    center: [-121,39],
     projection: 'EPSG:4326',
     zoom: 8,
     rotation: 0
@@ -17,10 +17,6 @@ function success(pos: GeolocationPosition){
 }
 const error = (err: any) => {
     console.warn(`ERROR(${err.code}): ${err.message}`);
-}
-//Gets random range of numbers for area, can be used later to get user data.
-const getRandomInRange = (from, to, fixed) => {
-    return (Math.random() * (to - from) + from).toFixed(fixed) * 1;
 }
 
 
