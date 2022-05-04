@@ -2,9 +2,11 @@ package tensor
 
 import (
 	"errors"
-	"gocv.io/x/gocv"
 	"io/ioutil"
 	"strings"
+	"wildlife/internal/log"
+
+	"gocv.io/x/gocv"
 )
 
 // BuildModel builds the network model and loads the class names
@@ -20,6 +22,7 @@ func BuildModel(netName string, isCuda bool) (err error) {
 	Net = &netTemp
 	// set the network to use cuda if applicable
 	if isCuda {
+		log.Logf("Using CUDA")
 		err = Net.SetPreferableBackend(gocv.NetBackendCUDA)
 		if err != nil {
 			return err
@@ -29,6 +32,7 @@ func BuildModel(netName string, isCuda bool) (err error) {
 			return err
 		}
 	} else {
+		log.Logf("Using CPU")
 		err = Net.SetPreferableBackend(gocv.NetBackendOpenCV)
 		if err != nil {
 			return err

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import {inject, reactive} from 'vue';
 import {Upload, UploadState} from '../upload';
+import type Result from "../views/Results.vue";
 import Results from "../views/Results.vue";
 import Loading from "./Loading.vue";
 import {Detection} from "../types";
+import { v4 as uuid } from 'uuid';
 
 
 interface UploadProps {
@@ -11,26 +13,17 @@ interface UploadProps {
   waiting: boolean
   context: boolean,
   error: any,
-  response: {
-    name: string,
-    size: number,
-    thumbnail: string,
-    type: string,
-    threshold: string,
-    highlight: string,
-    results: string,
-    confidence: string,
-    detections: Detection[],
-    progress: UploadState[],
-    token: string,
-  },
+  response: any,
 }
+
+const ClassNames = ["Poison Oak", "Mature Poison Oak", "Young Poison Oak"]
 
 let state = reactive<UploadProps>({
   upload: {} as Upload,
   waiting: false,
   error: "",
   response: {
+    id: "",
     name: "",
     size: 0,
     type: "",
@@ -60,9 +53,12 @@ function updateStatus(up: UploadState) {
       state.response.thumbnail = up.data
       state.context = true
       cache.history.push({
+        id: state.response.id,
+        result: "",
         data: up.data,
         name: state.response.name,
         type: state.response.type,
+        confidence: 0,
       })
       state.waiting = false
       break
@@ -72,12 +68,36 @@ function updateStatus(up: UploadState) {
       if (!proto) return
       state.response.detections = proto as Detection[]
       state.context = true
+      let avgConf = proto.map((d:any) => d.confidence).reduce((a:any, b:any) => a + b, 0) / proto.length
+      let count = [0,0,0]
+      state.response.detections.forEach((d:any) => {
+        switch(d.type) {
+          case "Poison Oak":
+            count[0]++
+            break
+          case "Mature Poison Oak":
+            count[1]++
+            break
+          case "Young Poison Oak":
+            count[2]++
+            break
+        }
+      })
+      let max = Math.max(...count)
+      console.log(count, max)
+      cache.history.forEach((file: any) => {
+        if(file.id == state.response.id) {
+          file.result = ClassNames[count.indexOf(max)]
+          file.confidence = avgConf
+        }
+      });
       break
   }
 }
 
 function reset() {
   state.response = {
+    id: "",
     name: "",
     size: 0,
     thumbnail: "",
@@ -108,7 +128,7 @@ function uploadFile(event: any) {
   state.upload.addFile(file)
   state.upload.submit()
 
-
+  state.response.id = uuid()
   state.response.name = file.name
   state.response.type = file.type
   state.response.size = file.size
@@ -128,17 +148,19 @@ function uploadFile(event: any) {
                                                                         style="text-decoration: none;">&nbsp;</i>Done
       </a>
       <h2 class="my-1">Upload Status</h2>
-      <Results :response="state.response"></Results>
+      <Results :response="(state.response)"></Results>
     </div>
     <div v-else class="d-flex flex-column">
       <h2>Upload An Image</h2>
       <div class="d-flex justify-content-between gap-0">
         <div class="flex-shrink-0">
-          <label class="custom-file-upload button">
-            <input id="camera" accept="image/png,image/jpeg" capture="user" class="button" type="file"
-                   @change="uploadFile">
-            <i class="fa-solid fa-camera" style="text-align: center;"></i>
-          </label>
+          <div class = "d-block d-sm-block d-md-block d-lg-none">
+            <label class="custom-file-upload button">
+              <input id="camera" accept="image/png,image/jpeg" capture="environment" class="button" type="file"
+                    @change="uploadFile">
+              <i class="fa-solid fa-camera" style="text-align: center;"></i>
+            </label>
+          </div>
         </div>
         <div class="flex-grow-1">
           <label class="custom-file-upload button">
@@ -153,13 +175,9 @@ function uploadFile(event: any) {
             </span>
           </label>
         </div>
-
       </div>
-
     </div>
-
   </div>
-
 </template>
 
 <style scoped>
@@ -191,9 +209,7 @@ input[type="file"] {
 
 .child {
   display: inline-block;
-
   padding: 2px;
-
 }
 
 </style>
