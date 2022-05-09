@@ -76,7 +76,9 @@ let state = reactive({})
                 <i class="fa-solid fa-circle-check text-accent label-c5 fa-fw"></i>&nbsp;&nbsp;Low irritation
               </span>
               <span v-else>
-                <i class="fa-solid fa-triangle-exclamation text-orange label-c5"></i>&nbsp;&nbsp;{{ props.response.detections.length }} Irritants Detected
+                <i class="fa-solid fa-triangle-exclamation text-orange label-c5"></i>&nbsp;&nbsp;{{
+                  props.response.detections.length
+                }} Irritants Detected
               </span>
 
             </h3>
@@ -93,7 +95,7 @@ let state = reactive({})
       </div>
     </div>
 
-    <div class="d-flex flex-row gap-3">
+    <div class="d-flex flex-column flex-lg-row gap-3">
 
       <div class="flex-grow-1">
         <img v-if="props.response.results !== ''" :src="`data:image/jpg;base64,${props.response.results}`" alt="results"

@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 
 import {inject} from "vue";
+import type {Cache, UploadResult} from "../upload";
 
-let cache: any = inject('cache')
+let cache: Cache = inject('cache') || {} as Cache
 
 function clear() {
-  cache.history = cache.history.filter((g: any) => !g)
+  cache.history = cache.history.filter((g: UploadResult) => !g) as UploadResult[]
 }
 
 </script>
@@ -16,10 +17,9 @@ function clear() {
       <h2>Previous Uploads</h2>
       <a class="clear_btn" href="#" @click="clear">clear</a>
     </div>
-
     <div class="image-grid">
-      <div v-for="file in cache.history" :key="file.name">
-        <div class="image">
+      <div v-for="file in cache.history">
+        <div v-if="file" class="image">
           <div :style="`background-image: url('data:image/jpg;base64,${file.data}');`" class="image-preview">
 
           </div>
@@ -38,7 +38,7 @@ function clear() {
               </div>
             </div>
             <div class="label-c4 label-o4"><i class="fa-solid fa-magnifying-glass" style="text-align:right;"></i>
-            {{ file.result }}
+              {{ file.result }}
             </div>
             <div class="label-c4 label-o3"> {{ ((file.confidence * 100) || 0).toPrecision(4) }}%
               confidence

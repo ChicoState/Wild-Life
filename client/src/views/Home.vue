@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import Upload from '@/components/Upload.vue'
 import History from "@/components/History.vue"
-</script>
+import Map from "@/views/Map.vue"</script>
 
 <template>
   <div>
