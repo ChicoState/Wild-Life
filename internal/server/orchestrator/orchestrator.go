@@ -1,11 +1,18 @@
 package orchestrator
 
+// UUID: Universally Unique Identifier
+// Used to identify application w/out central registration authority
+// 128 bit 
+
 import (
 	"fmt"
 	"github.com/google/uuid"
 	"time"
 	"wildlife/internal/log"
 )
+
+// Orchestrator's help our program run class platform
+// Kubernetes is an orchestrator 
 
 var meta *Orchestrator
 

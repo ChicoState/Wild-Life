@@ -9,6 +9,10 @@ import (
 	"wildlife/internal/server/tensor"
 )
 
+//ONNX: Open Neural Network Exchange
+//Allows us to train a model using python 
+//Save the model to a universal file
+//Access it in go! 
 const VERSION = "0.1.4"
 const OnnxModel = "assets/poisonOak.onnx"
 
@@ -16,7 +20,7 @@ func main() {
 	log.Logf("Started v%s", VERSION)
 
 	// Load Environment
-	err := env.Load()
+	err := env.Load("")
 	if err != nil {
 		log.Errf("Environment initialization failed: %s", err)
 	}

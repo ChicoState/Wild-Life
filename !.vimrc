@@ -1,0 +1,1 @@
+set <esc> jj

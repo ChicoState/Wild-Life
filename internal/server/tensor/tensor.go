@@ -5,9 +5,21 @@ import (
 	"io/ioutil"
 	"strings"
 	"wildlife/internal/log"
-
 	"gocv.io/x/gocv"
 )
+
+// loadClass the class names from a txt file
+// These are labels that the model is able to classify
+func loadClass() (err error) {
+	// open file assets/poisonOak.txt
+	body, err := ioutil.ReadFile("assets/poisonOak.txt")
+	if err != nil {
+		return
+	}
+	// split by new line
+	ClassNames = strings.Split(string(body), "\n")
+	return
+}
 
 // BuildModel builds the network model and loads the class names
 func BuildModel(netName string, isCuda bool) (err error) {
@@ -50,14 +62,4 @@ func BuildModel(netName string, isCuda bool) (err error) {
 	return
 }
 
-// loadClass the class names from a txt file
-func loadClass() (err error) {
-	// open file assets/poisonOak.txt
-	body, err := ioutil.ReadFile("assets/poisonOak.txt")
-	if err != nil {
-		return
-	}
-	// split by new line
-	ClassNames = strings.Split(string(body), "\n")
-	return
-}
+

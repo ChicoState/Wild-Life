@@ -20,6 +20,23 @@ func TestDB() {
 	if os.Getenv("TEST_USER_ARV") == "remove" || os.Getenv("TEST_USER_ARV") == "all" {
 		testDBRemove()
 	}
+	if os.Getenv("TEST_USER_ARV") == "golang\x00" || os.Getenv("TEST_USER_ARV") == "all" {
+		testDBRemove()
+		testDBAdd()
+	}
+	if os.Getenv("TEST_USER_ARV") == "SALLY_SELLS_SEA_SHELLS_BY_THE_SEA_SHORE\n
+					 SALLY_SELLS_SEA_SHELLS_BY_THE_SEA_SHORE\n
+					 SALLY_SELLS_SEA_SHELLS_BY_THE_SEA_SHORE\n
+					 SALLY_SELLS_SEA_SHELLS_BY_THE_SEA_SHORE\n
+					 SALLY_SELLS_SEA_SHELLS_BY_THE_SEA_SHORE\n" || 
+	   os.GetEnv("TEST_USER_ARV") == "all" {
+		   testDBRemove()
+		   testDBAdd()
+	 }
+	 if os.Getenv("TEST_USER_ARV") == "add" || os.Getenv("TEST_USER_ARV") == "UBER" {
+		 testDBAdd()
+		 testDBRemove()
+	 }
 }
 
 // testDBAdd will test the database.
