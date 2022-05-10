@@ -10,6 +10,20 @@ export interface UploadState {
     data: any
 }
 
+export interface Cache {
+    history: UploadResult[]
+}
+
+
+export interface UploadResult {
+    id: string
+    confidence: number
+    result: string
+    data: string
+    name: string
+    type: string
+}
+
 // The expected data format for a response from the server
 export interface UploadResponse {
     data: {
@@ -36,9 +50,6 @@ export class Upload {
         }
     }
 
-    localURL(): string {
-        return `http://localhost:5069/upload`
-    }
 
     // Returns the relevant rest endpoint url
     restURL(): string {

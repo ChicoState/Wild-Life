@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import {inject, reactive} from 'vue';
-import {Upload, UploadState} from '../upload';
-import type Result from "../views/Results.vue";
+import {Cache, Upload, UploadResult, UploadState} from '../upload';
 import Results from "../views/Results.vue";
 import Loading from "./Loading.vue";
 import {Detection} from "../types";
-import { v4 as uuid } from 'uuid';
+import {v4 as uuid} from 'uuid';
 
 
 interface UploadProps {
@@ -40,7 +39,7 @@ let state = reactive<UploadProps>({
 });
 
 
-let cache: any = inject('cache')
+let cache: Cache = inject('cache') || {} as Cache
 
 function updateError(res: any) {
   state.error = res
@@ -52,14 +51,15 @@ function updateStatus(up: UploadState) {
     case "processing":
       state.response.thumbnail = up.data
       state.context = true
-      cache.history.push({
+      let us: UploadResult = {
         id: state.response.id,
-        result: "",
+        result: "na",
         data: up.data,
         name: state.response.name,
         type: state.response.type,
-        confidence: 0,
-      })
+        confidence: 0.0,
+      }
+      cache.history.push(us)
       state.waiting = false
       break
     case "results":
@@ -68,8 +68,8 @@ function updateStatus(up: UploadState) {
       if (!proto) return
       state.response.detections = proto as Detection[]
       state.context = true
-      let avgConf = proto.map((d:any) => d.confidence).reduce((a:any, b:any) => a + b, 0) / proto.length
-      let count = [0,0,0]
+      let avgConf = proto.map((d: any) => d.confidence).reduce((a: any, b: any) => a + b, 0) / proto.length
+      let count = [0, 0, 0]
       state.response.detections.forEach((d:any) => {
         switch(d.type) {
           case "Poison Oak":
@@ -84,13 +84,23 @@ function updateStatus(up: UploadState) {
         }
       })
       let max = Math.max(...count)
-      console.log(count, max)
+
+
       cache.history.forEach((file: any) => {
-        if(file.id == state.response.id) {
+        if (file.id == state.response.id) {
           file.result = ClassNames[count.indexOf(max)]
           file.confidence = avgConf
         }
       });
+
+      // cache.history = cache.history.map((file: UploadResult) => {
+      //   if(file.id == state.response.id) {
+      //     file.result = ClassNames[count.indexOf(max)]
+      //     file.confidence = avgConf
+      //   }
+      // })
+
+
       break
   }
 }
