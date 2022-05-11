@@ -33,40 +33,30 @@ func (t TestTask) Key() uuid.UUID {
 	return t.key
 }
 
-// cannot run 2 orchestrators in parallel
-// func TestOrchestrator_Enroll(t *testing.T) {
-// 	// Create a new Orchestrator
-// 	o, err := NewOrchestrator()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	// Create a test task
-// 	ta := &TestTask{}
-// 	_, err = o.Enroll(ta)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	enrolled := ta.Key()
-// 	// Connect to the task to receive updates
-// 	connect, err := o.Connect(enrolled)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	for {
-// 		select {
-// 		case msg := <-connect:
+// making 2 orchestrators to test concurrent access
+func TestNewOrchestrator2(t *testing.T) {
+	o, err := NewOrchestrator()
+	if err != nil {
+		t.Error(err)
+	}
+	err = o.Close()
+	if err != nil {
+		t.Error(err)
+	}
+}
 
-// 			if msg.State == "complete" {
-// 				err = o.Close()
-// 				if err != nil {
-// 					t.Error(err)
-// 				}
-// 			}
-// 		case <-time.After(time.Second * 3):
-// 			t.Errorf("Orchestrator failed to resolve within 3 seconds")
-// 			return
-// 		default:
-// 			return
-// 		}
-// 	}
-// }
+func TestEnroll(t *testing.T) {
+	o, err := NewOrchestrator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ta := &TestTask{}
+	_, err = o.Enroll(ta)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = o.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
