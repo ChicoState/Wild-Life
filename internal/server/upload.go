@@ -63,7 +63,9 @@ func uploadFile(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		return
 	}
-	token := orchestrator.NewLeafProcessJob(buf.Bytes())
+	orch := request.Context().Value("orch").(*orchestrator.Orchestrator)
+
+	token := orchestrator.NewLeafProcessJob(orch, buf.Bytes())
 	// Populate the file response struct
 	fileResponse := FileResponse{
 		Name:  m.Filename,

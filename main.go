@@ -5,7 +5,6 @@ import (
 	"wildlife/internal/log"
 	"wildlife/internal/server"
 	"wildlife/internal/server/controller"
-	"wildlife/internal/server/orchestrator"
 	"wildlife/internal/server/tensor"
 )
 
@@ -27,19 +26,6 @@ func main() {
 		log.Errf("Onnx Model initialization failed: %s", err)
 		return
 	}
-
-	var o *orchestrator.Orchestrator
-	o, err = orchestrator.NewOrchestrator()
-	if err != nil {
-		log.Errf("Orchestrator initialization failed: %s", err)
-		return
-	}
-	defer func(o *orchestrator.Orchestrator) {
-		err = o.Close()
-		if err != nil {
-			log.Errf("Orchestrator deconstruction failed: %s", err)
-		}
-	}(o)
 
 	// Initialize the controllers with the database
 	err = controller.InitController()
