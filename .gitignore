@@ -33,3 +33,4 @@ client/coverage/
 dist/
 wildlife         # Binary file
 tmp
+*.vimrc
