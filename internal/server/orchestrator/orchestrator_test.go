@@ -46,7 +46,7 @@ func (t TestTask) Key() uuid.UUID {
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
-
+// 	enrolled := ta.Key()
 // 	// Connect to the task to receive updates
 // 	connect, err := Connect(enrolled)
 // 	if err != nil {
