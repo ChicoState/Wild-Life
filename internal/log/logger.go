@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"testing"
 	"time"
 )
 
@@ -71,16 +70,4 @@ func Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
-}
-
-func Testf(format string, args ...interface{}) {
-	fmt.Printf("%s[Test]%s %s%s", colorBlue, colorReset, format, colorReset)
-}
-
-func Resf(t *testing.T) {
-	if !t.Failed() {
-		fmt.Printf("%s[PASS]%s\n", colorGreen, colorReset)
-	} else {
-		fmt.Printf("%s[FAIL]%s\n", colorRed, colorReset)
-	}
 }
