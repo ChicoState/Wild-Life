@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"wildlife/internal/log"
 	"wildlife/internal/server/controller"
+	"wildlife/internal/server/orchestrator"
 	"wildlife/internal/test"
 
 	"github.com/go-chi/chi/v5"
@@ -26,6 +28,17 @@ func Start() error {
 	// Status middleware
 	router.Use(middleware.Heartbeat("/status"))
 	// Route requests to individual routers
+	orch, err := orchestrator.NewOrchestrator()
+	if err != nil {
+		return err
+	}
+	defer func(o *orchestrator.Orchestrator) {
+		err = o.Close()
+		if err != nil {
+			log.Errf("Orchestrator deconstruction failed: %s", err)
+		}
+	}(orch)
+	router.Use(OrchestratorContext(orch))
 	router.Route("/upload", uploadRouter)
 	router.Route("/sockets", socketRouter)
 
@@ -63,6 +76,15 @@ func Start() error {
 		return err
 	}
 	return nil
+}
+
+func OrchestratorContext(orch *orchestrator.Orchestrator) func(n http.Handler) http.Handler {
+	return func(n http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), "orch", orch)
+			n.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 // cors provides allows cross-origin requests, only in development mode

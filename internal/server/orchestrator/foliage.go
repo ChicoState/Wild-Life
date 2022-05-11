@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"image"
 	"image/color"
 	"math"
@@ -11,7 +12,6 @@ import (
 	"wildlife/internal/log"
 	"wildlife/internal/server/tensor"
 
-	"github.com/google/uuid"
 	"gocv.io/x/gocv"
 )
 
@@ -22,6 +22,24 @@ func init() {
 
 const thumbnailResolution = 360
 const resultResolution = 2560
+
+type Detection struct {
+	Bounds      image.Rectangle   `json:"bounds"`
+	Confidence  float64           `json:"confidence"`
+	Classes     []int             `json:"classes"`
+	Boxes       []image.Rectangle `json:"boxes"`
+	Confidences []float64         `json:"confidences"`
+	Type        string            `json:"type"`
+}
+
+func NewUpdate(state string, message string, data interface{}) Update {
+	return Update{
+		Time:    time.Now(),
+		State:   state,
+		Message: message,
+		Data:    data,
+	}
+}
 
 type LeafProcess struct {
 	key    uuid.UUID
@@ -35,12 +53,12 @@ func (l *LeafProcess) Assign(u uuid.UUID) {
 }
 
 // NewLeafProcessJob creates a request for a session token
-func NewLeafProcessJob(buffer []byte) uuid.UUID {
+func NewLeafProcessJob(orch *Orchestrator, buffer []byte) uuid.UUID {
 	process := LeafProcess{
 		buffer: buffer,
 		key:    uuid.New(),
 	}
-	id, err := meta.Enroll(&process)
+	id, err := orch.Enroll(&process)
 	if err != nil {
 		return id
 	}
@@ -52,15 +70,6 @@ func (l *LeafProcess) Key() uuid.UUID {
 	return l.key
 }
 
-func NewUpdate(state string, message string, data interface{}) Update {
-	return Update{
-		Time:    time.Now(),
-		State:   state,
-		Message: message,
-		Data:    data,
-	}
-}
-
 // Run starts the process
 func (l *LeafProcess) Run(c chan Update) error {
 	// Send an update to the client confirming upload
@@ -69,15 +78,6 @@ func (l *LeafProcess) Run(c chan Update) error {
 		return err
 	}
 	return nil
-}
-
-type Detection struct {
-	Bounds      image.Rectangle   `json:"bounds"`
-	Confidence  float64           `json:"confidence"`
-	Classes     []int             `json:"classes"`
-	Boxes       []image.Rectangle `json:"boxes"`
-	Confidences []float64         `json:"confidences"`
-	Type        string            `json:"type"`
 }
 
 // aggregateBoxes combines duplicated Boxes, and Boxes mostly overlapping

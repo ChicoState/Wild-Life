@@ -41,7 +41,8 @@ func connectWebsockets(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "no token was provided", http.StatusBadRequest)
 		return
 	}
-	rx, err := orchestrator.Connect(uuidParse)
+	orch := request.Context().Value("orch").(*orchestrator.Orchestrator)
+	rx, err := orch.Connect(uuidParse)
 	if err != nil {
 		http.Error(writer, "could not find active job with that token", http.StatusNotFound)
 		return
