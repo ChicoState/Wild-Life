@@ -12,11 +12,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Orchestrator's help our program run class platform
-// Kubernetes is an orchestrator
-
-var meta *Orchestrator
-
 type Update struct {
 	Time    time.Time   `json:"time"`
 	State   string      `json:"state"`
@@ -39,7 +34,7 @@ type Orchestrator struct {
 }
 
 // NewOrchestrator initializes a new Orchestrator
-func NewOrchestrator() (*Orchestrator, error) {
+func NewOrchestrator() (meta *Orchestrator, err error) {
 	if meta != nil {
 		return nil, fmt.Errorf("orchestrator has already been initialized")
 	}
@@ -51,7 +46,7 @@ func NewOrchestrator() (*Orchestrator, error) {
 		latest:   map[uuid.UUID]chan Update{},
 	}
 	// Begin listening on channels
-	err := meta.start()
+	err = meta.start()
 	if err != nil {
 		return nil, err
 	}
@@ -91,11 +86,11 @@ func (o *Orchestrator) Close() error {
 }
 
 // Connect accepts incoming pared connections
-func Connect(token uuid.UUID) (chan Update, error) {
-	if meta.latest[token] == nil {
+func (o *Orchestrator) Connect(token uuid.UUID) (chan Update, error) {
+	if o.latest[token] == nil {
 		return nil, fmt.Errorf("token not found")
 	}
-	return meta.latest[token], nil
+	return o.latest[token], nil
 }
 
 // update forwards an update message state to a client
