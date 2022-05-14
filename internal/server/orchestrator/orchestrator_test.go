@@ -44,19 +44,3 @@ func TestNewOrchestrator2(t *testing.T) {
 		t.Error(err)
 	}
 }
-
-func TestEnroll(t *testing.T) {
-	o, err := NewOrchestrator()
-	if err != nil {
-		t.Fatal(err)
-	}
-	ta := &TestTask{}
-	_, err = o.Enroll(ta)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = o.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
