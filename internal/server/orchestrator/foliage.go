@@ -53,16 +53,12 @@ func (l *LeafProcess) Assign(u uuid.UUID) {
 }
 
 // NewLeafProcessJob creates a request for a session token
-func NewLeafProcessJob(orch *Orchestrator, buffer []byte) uuid.UUID {
-	process := LeafProcess{
+func NewLeafProcessJob(buffer []byte) *LeafProcess {
+	process := &LeafProcess{
 		buffer: buffer,
 		key:    uuid.New(),
 	}
-	id, err := orch.Enroll(&process)
-	if err != nil {
-		return id
-	}
-	return id
+	return process
 }
 
 // Key returns the identifier key of the process

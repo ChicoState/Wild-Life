@@ -59,7 +59,10 @@ func LoadUsers() (*map[string]*User, error) {
 	// Checks if we should migrate
 	if os.Getenv("MIGRATE") == "true" {
 		// Migrates the database
-		DB.AutoMigrate(&User{})
+		err := DB.AutoMigrate(&User{})
+		if err != nil {
+			return nil, err
+		}
 	}
 	// Loads all users from DB
 	err := DB.Find(&users).Error

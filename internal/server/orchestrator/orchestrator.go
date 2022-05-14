@@ -40,7 +40,7 @@ func NewOrchestrator() (meta *Orchestrator, err error) {
 	}
 	// Initialize the Orchestrator struct
 	meta = &Orchestrator{
-		receiver: make(chan Request),
+		receiver: make(chan Request, 8),
 		resolver: make(chan Request, 16),
 		resolved: map[uuid.UUID]Request{},
 		latest:   map[uuid.UUID]chan Update{},
