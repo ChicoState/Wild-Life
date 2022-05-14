@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -18,6 +19,9 @@ type User struct {
 
 // Creates a new user
 func NewUser(name string, email string) *User {
+	if DB == nil {
+		return nil
+	}
 	var user *User
 	//find user in DB by email
 	DB.Where("email = ?", email).First(user)
@@ -32,6 +36,9 @@ func NewUser(name string, email string) *User {
 
 // Returns error if user couldn't be created
 func (u *User) Create() error {
+	if DB == nil {
+		return fmt.Errorf("DB not initialized")
+	}
 	// Creates a new user in the DB
 	err := DB.Create(u).Error
 	return err
@@ -39,6 +46,9 @@ func (u *User) Create() error {
 
 // Returns error if user couldn't be saved
 func (u *User) Save() error {
+	if DB == nil {
+		return fmt.Errorf("DB not initialized")
+	}
 	// Saves the user to the DB
 	err := DB.Save(u).Error
 	return err
@@ -46,6 +56,9 @@ func (u *User) Save() error {
 
 // Returns error if user couldn't be deleted
 func (u *User) Delete() error {
+	if DB == nil {
+		return fmt.Errorf("DB not initialized")
+	}
 	// Deletes the user from the DB
 	err := DB.Delete(u).Error
 	return err
@@ -53,6 +66,9 @@ func (u *User) Delete() error {
 
 // Returns user by email
 func FindUserByEmail(email string) (User, error) {
+	if DB == nil {
+		return User{}, fmt.Errorf("DB not initialized")
+	}
 	var user *User
 	//find user in DB by email
 	DB.Raw("SELECT * FROM users WHERE email = ?", email).Scan(&user)

@@ -1,7 +1,7 @@
 package controller
 
 // Controllers implement Kubernetes APIs
-// Creates a manager 
+// Creates a manager
 // Passes it to controller.New function
 // Controller is started by Manager.Start
 
