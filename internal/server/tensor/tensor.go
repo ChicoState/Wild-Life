@@ -3,21 +3,43 @@ package tensor
 import (
 	"errors"
 	"io/ioutil"
+	"os"
 	"strings"
 	"wildlife/internal/log"
 
 	"gocv.io/x/gocv"
 )
 
-// BuildModel builds the network model and loads the class names
-func BuildModel(netName string, isCuda bool) (err error) {
-	// load class names
-	err = loadClass()
+const (
+	ClassFile = "/poisonOak.txt"
+	ModelFile = "/poisonOak.onnx"
+)
+
+// loadClass the class names from a txt file
+// These are labels that the model is able to classify
+func loadClass(dir string) (err error) {
+	// open file assets/poisonOak.txt
+	body, err := ioutil.ReadFile(dir)
 	if err != nil {
 		return
 	}
+	// split by new line
+	ClassNames = strings.Split(string(body), "\n")
+	return
+}
+
+// BuildModel builds the network model and loads the class names
+func BuildModel(assets string, isCuda bool) (err error) {
+	// load class names
+	err = loadClass(assets + ClassFile)
+	if err != nil {
+		return
+	}
+	if os.Getenv("CUDA_ENABLED") != "true" && isCuda {
+		err = errors.New("CUDA is not enabled")
+	}
 	// load the model
-	netTemp := gocv.ReadNetFromONNX(netName)
+	netTemp := gocv.ReadNetFromONNX(assets + ModelFile)
 	// allows the network to be used outside this module
 	Net = &netTemp
 	// set the network to use cuda if applicable
@@ -47,17 +69,5 @@ func BuildModel(netName string, isCuda bool) (err error) {
 		err = errors.New("error loading network model")
 		return
 	}
-	return
-}
-
-// loadClass the class names from a txt file
-func loadClass() (err error) {
-	// open file assets/poisonOak.txt
-	body, err := ioutil.ReadFile("assets/poisonOak.txt")
-	if err != nil {
-		return
-	}
-	// split by new line
-	ClassNames = strings.Split(string(body), "\n")
 	return
 }

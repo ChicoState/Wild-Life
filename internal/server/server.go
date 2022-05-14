@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"os"
 	"wildlife/internal/log"
-	"wildlife/internal/server/controller"
 	"wildlife/internal/server/orchestrator"
-	"wildlife/internal/test"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -41,24 +39,6 @@ func Start() error {
 	router.Use(OrchestratorContext(orch))
 	router.Route("/upload", uploadRouter)
 	router.Route("/sockets", socketRouter)
-
-	// Test database
-	if os.Getenv("TEST_USER_ARV") == "add" || os.Getenv("TEST_USER_ARV") == "remove" || os.Getenv("TEST_USER_ARV") == "all" {
-		test.TestDB()
-		// This test might mess with the already loaded users
-	}
-
-	// Test db add/remove
-	if os.Getenv("TEST_USER_ARV_WEB") == "add" || os.Getenv("TEST_USER_ARV_WEB") == "all" {
-		router.Get("/test/user/add", controller.TestDBAdd)
-	}
-
-	if os.Getenv("TEST_USER_ARV_WEB") == "remove" || os.Getenv("TEST_USER_ARV_WEB") == "all" {
-		router.Get("/test/user/remove", controller.TestDBRemove)
-	}
-	if os.Getenv("TEST_USER_ARV_WEB") == "view" || os.Getenv("TEST_USER_ARV_WEB") == "all" {
-		router.Get("/test/user/view", controller.TestDBView)
-	}
 
 	port := os.Getenv("PORT")
 	if port == "" {

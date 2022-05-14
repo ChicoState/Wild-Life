@@ -45,6 +45,14 @@ Ensure the port specified matches the configuration for the front-end.
 PORT=5069
 ```
 
+#### Testing
+
+Testing requires the coverage package to show detailed statements
+
+```
+go test -cover ./...
+```
+
 ### Production
 
 Initialize a .env file in the root directory of the repository. Docker-compose will feed the file into the container.

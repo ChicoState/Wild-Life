@@ -2,9 +2,10 @@ package model
 
 import (
 	"fmt"
+	"time"
+
 	"log"
 	"os"
-	"time"
 	wlog "wildlife/internal/log"
 
 	"gorm.io/driver/mysql"
@@ -23,7 +24,6 @@ func InitDB() error {
 	// Database connection string
 	// ie "user:password@tcp(localhost:3306)/dbname?charset=utf8&parseTime=True&loc=Local"
 	dbstring := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
-
 	// Grabbed from GORM's website https://gorm.io/docs/logger.html
 	// Our logger will do what this can do
 	newLogger := logger.New(
@@ -49,6 +49,9 @@ func InitDB() error {
 
 // Loads users from DB into memory as cache
 func LoadUsers() (*map[string]*User, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("DB not initialized")
+	}
 	// Used to store users from DB
 	var users []User
 	// Used to return users to cache

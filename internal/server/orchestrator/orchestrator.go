@@ -1,10 +1,15 @@
 package orchestrator
 
+// UUID: Universally Unique Identifier
+// Used to identify application w/out central registration authority
+// 128 bit
+
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"time"
 	"wildlife/internal/log"
+
+	"github.com/google/uuid"
 )
 
 type Update struct {

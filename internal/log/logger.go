@@ -13,6 +13,7 @@ const (
 	name       = "WildLife"
 	colorGreen = "\u001B[1;32m"
 	colorRed   = "\u001B[1;31m"
+	colorBlue  = "\u001B[1;34m"
 	colorReset = "\u001B[m"
 )
 

@@ -1,8 +1,9 @@
 package orchestrator
 
 import (
-	"github.com/google/uuid"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestNewOrchestrator(t *testing.T) {
@@ -32,40 +33,30 @@ func (t TestTask) Key() uuid.UUID {
 	return t.key
 }
 
-func TestOrchestrator_Enroll(t *testing.T) {
-	// Create a new Orchestrator
+// making 2 orchestrators to test concurrent access
+func TestNewOrchestrator2(t *testing.T) {
 	o, err := NewOrchestrator()
 	if err != nil {
 		t.Error(err)
 	}
-	// Create a test task
-	ta := &TestTask{}
-	_, err = o.Enroll(ta)
+	err = o.Close()
 	if err != nil {
 		t.Error(err)
 	}
-	//
-	// // Connect to the task to receive updates
-	// connect, err := Connect(enrolled)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
-	// for {
-	// 	select {
-	// 	case msg := <-connect:
-	//
-	// 		if msg.State == "complete" {
-	// 			err = o.Close()
-	// 			if err != nil {
-	// 				t.Error(err)
-	// 			}
-	// 		}
-	// 	case <-time.After(time.Second * 3):
-	// 		t.Errorf("Orchestrator failed to resolve within 3 seconds")
-	// 		return
-	// 	default:
-	// 		return
-	// 	}
-	// }
-
 }
+
+// func TestEnroll(t *testing.T) {
+// 	o, err := NewOrchestrator()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	ta := &TestTask{}
+// 	_, err = o.Enroll(ta)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	err = o.Close()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }

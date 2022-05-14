@@ -8,8 +8,14 @@ import (
 	"wildlife/internal/server/tensor"
 )
 
-const VERSION = "0.1.4"
-const OnnxModel = "assets/poisonOak.onnx"
+//ONNX: Open Neural Network Exchange
+//Allows us to train a model using python
+//Save the model to a universal file
+//Access it in go!
+const (
+	VERSION = "0.1.4"
+	ASSETS  = "assets"
+)
 
 func main() {
 	log.Logf("Started v%s", VERSION)
@@ -21,7 +27,7 @@ func main() {
 	}
 
 	// Initialize the CNN model
-	err = tensor.BuildModel(OnnxModel, false)
+	err = tensor.BuildModel(ASSETS, false)
 	if err != nil {
 		log.Errf("Onnx Model initialization failed: %s", err)
 		return
