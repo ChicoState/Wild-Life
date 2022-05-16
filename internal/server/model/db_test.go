@@ -75,7 +75,7 @@ func TestInitModelSuccess(t *testing.T) {
 	}
 	testUsers, err := LoadUsers()
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("%s", err)
 	}
 	if len(*testUsers) == 0 {
 		t.Fatalf("LoadUsers() should have returned at least one user")
