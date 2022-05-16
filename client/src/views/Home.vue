@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import Upload from '@/components/Upload.vue'
-import History from "@/components/History.vue"
-import Map from "@/views/Map.vue"</script>
+import History from "@/components/History.vue"</script>
 
 <template>
   <div>
@@ -11,9 +10,6 @@ import Map from "@/views/Map.vue"</script>
     <div>
       <History></History>
     </div>
-  </div>
-  <div class="flex-grow-1">
-    <Map></Map>
   </div>
 </template>
 <style scoped>

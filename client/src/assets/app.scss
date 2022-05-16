@@ -109,7 +109,23 @@ $colors: (
 }
 
 .text-accent {
-  color: $accent-green;
+  color: $accent-green !important;
+}
+
+.router-link-active {
+  border-radius: $border-radius;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.05);
+  background-color: $foreground;
+}
+
+.link-fixed {
+  font-weight: 400;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .logo-icon {

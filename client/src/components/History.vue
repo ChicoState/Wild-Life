@@ -6,7 +6,7 @@ import type {Cache, UploadResult} from "../upload";
 let cache: Cache = inject('cache') || {} as Cache
 
 function clear() {
-  cache.history = cache.history.filter((g: UploadResult) => !g).sort((a, b) => a.id > b.id ? 1 : -1) as UploadResult[]
+  cache.history = cache.history.filter((g: UploadResult) => !g).reverse() as UploadResult[]
 }
 
 </script>
@@ -17,7 +17,7 @@ function clear() {
       <h2>Previous Uploads</h2>
       <a class="clear_btn" href="#" @click="clear">clear</a>
     </div>
-    <div class="image-grid">
+    <div v-if="cache.history.length > 0" class="image-grid">
       <div v-for="file in cache.history">
         <div v-if="file" class="image">
           <div :style="`background-image: url('data:image/jpg;base64,${file.data}');`" class="image-preview">
@@ -48,6 +48,12 @@ function clear() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <div v-else>
+      <div class="image">
+        <div
+            class="label-c5 label-o2 p-2">You haven't uploaded any images yet. When you do, they will appear here.</div>
       </div>
     </div>
   </div>
@@ -88,8 +94,8 @@ function clear() {
 
 .clear_btn {
   float: right;
-  color: rgb(108, 194, 2);
-  text-decoration: none;
+  color: #40826D;
+  text-decoration: underline;
 }
 
 </style>

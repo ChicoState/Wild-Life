@@ -11,8 +11,12 @@ interface UploadProps {
   upload: Upload,
   waiting: boolean
   context: boolean,
-  error: any,
+  error: ErrorMessage,
   response: any,
+}
+
+interface ErrorMessage {
+  message: string
 }
 
 const ClassNames = ["Poison Oak", "Mature Poison Oak", "Young Poison Oak"]
@@ -20,7 +24,7 @@ const ClassNames = ["Poison Oak", "Mature Poison Oak", "Young Poison Oak"]
 let state = reactive<UploadProps>({
   upload: {} as Upload,
   waiting: false,
-  error: "",
+  error: {} as ErrorMessage,
   response: {
     id: "",
     name: "",
@@ -39,10 +43,14 @@ let state = reactive<UploadProps>({
 });
 
 
-let cache: Cache = inject('cache') || {} as Cache
+let cache: Cache = inject('cache') as Cache
 
 function updateError(res: any) {
-  state.error = res
+  let ct = JSON.parse(res)
+  if (!ct) return
+  state.error = ct
+  reset()
+  state.waiting = false
 }
 
 function updateStatus(up: UploadState) {
@@ -158,7 +166,7 @@ function uploadFile(event: any) {
 <template>
 
   <div id="content-mobile">
-    <span v-if="state.error">{{ state.error }}</span>
+
     <div v-if="state.context" class="">
       <a class="text-accent" href="#" @click="state.context = false"><i class="fas fa-chevron-left label-o4"
                                                                         style="text-decoration: none;">&nbsp;</i>Done
@@ -176,8 +184,10 @@ function uploadFile(event: any) {
                     @change="uploadFile">
               <i class="fa-solid fa-camera" style="text-align: center;"></i>
             </label>
+
           </div>
         </div>
+
         <div class="flex-grow-1">
           <label class="custom-file-upload button">
             <input id="upload" accept="image/png,image/jpeg" class="button" type="file" @change="uploadFile">
@@ -190,6 +200,9 @@ function uploadFile(event: any) {
               <span>&nbsp;&nbsp;Select File</span>
             </span>
           </label>
+          <span v-if="state.error.message" style="color: rgb(222,122,122);">Upload failed. Please try again later. <span
+              class="label-o3">({{ state.error.message }})</span></span>
+
         </div>
       </div>
     </div>
