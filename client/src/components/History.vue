@@ -6,7 +6,7 @@ import type {Cache, UploadResult} from "../upload";
 let cache: Cache = inject('cache') || {} as Cache
 
 function clear() {
-  cache.history = cache.history.filter((g: UploadResult) => !g) as UploadResult[]
+  cache.history = cache.history.filter((g: UploadResult) => !g).sort((a, b) => a.id > b.id ? 1 : -1) as UploadResult[]
 }
 
 </script>
@@ -37,10 +37,13 @@ function clear() {
                 No irritants
               </div>
             </div>
-            <div class="label-c4 label-o4"><i class="fa-solid fa-magnifying-glass" style="text-align:right;"></i>
+            <div v-if="file.confidence > 0" class="label-c4 label-o4"><i class="fa-solid fa-magnifying-glass"
+                                                                         style="text-align:right;"></i>
               {{ file.result }}
             </div>
-            <div class="label-c4 label-o3"> {{ ((file.confidence * 100) || 0).toPrecision(4) }}%
+            <div v-if="file.confidence > 0" class="label-c4 label-o3"> {{
+                ((file.confidence * 100) || 0).toPrecision(4)
+              }}%
               confidence
             </div>
           </div>
