@@ -37,6 +37,7 @@ func BuildModel(assets string, isCuda bool) (err error) {
 	}
 	if os.Getenv("CUDA_ENABLED") != "true" && isCuda {
 		err = errors.New("CUDA is not enabled")
+		isCuda = false
 	}
 	// load the model
 	netTemp := gocv.ReadNetFromONNX(assets + ModelFile)

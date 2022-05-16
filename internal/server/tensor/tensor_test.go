@@ -70,6 +70,22 @@ func TestBuildModelRandomString(t *testing.T) {
 }
 
 func TestModel(t *testing.T) {
+	err := BuildModel("assets", false)
+	if err != nil {
+		t.Fatalf("Model not built\n")
+	}
+	img := gocv.IMRead("assets/test.jpeg", gocv.IMReadColor)
+	if img.Empty() {
+		t.Fatalf("Image not loaded\n")
+	}
+	// this image should have results
+	ids, _, _ := Detect(img)
+	if len(ids) == 0 {
+		t.Fatalf("No classes detected\n")
+	}
+}
+
+func TestModelCuda(t *testing.T) {
 	err := BuildModel("assets", true)
 	if err != nil {
 		t.Fatalf("Model not built\n")
@@ -86,6 +102,22 @@ func TestModel(t *testing.T) {
 }
 
 func TestModelNegative(t *testing.T) {
+	err := BuildModel("assets", false)
+	if err != nil {
+		t.Fatalf("Model not built\n")
+	}
+	img := gocv.IMRead("assets/test2.jpeg", gocv.IMReadColor)
+	if img.Empty() {
+		t.Fatalf("Image not loaded\n")
+	}
+	// this image should have no results
+	ids, _, _ := Detect(img)
+	if len(ids) != 0 {
+		t.Fatalf("Classes detected\n")
+	}
+}
+
+func TestModelNegativeCuda(t *testing.T) {
 	err := BuildModel("assets", true)
 	if err != nil {
 		t.Fatalf("Model not built\n")
