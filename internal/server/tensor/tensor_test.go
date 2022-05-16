@@ -8,7 +8,7 @@ import (
 )
 
 func TestAssetsFolder(t *testing.T) {
-	//check files in assets folder from os
+	// check files in assets folder from os
 	expected := []string{
 		"poisonOak.onnx",
 		"poisonOak.txt",
@@ -27,16 +27,16 @@ func TestAssetsFolder(t *testing.T) {
 	if len(files) == 0 {
 		t.Fatalf("Assets folder empty\n")
 	}
-	num_acquired := 0
+	numAcquired := 0
 	for _, f := range files {
 		for _, e := range expected {
 			if f.Name() == e {
-				num_acquired++
+				numAcquired++
 				continue
 			}
 		}
 	}
-	if num_acquired != len(expected) {
+	if numAcquired != len(expected) {
 		t.Fatalf("Not all files acquired\n")
 	}
 }
@@ -78,7 +78,7 @@ func TestModel(t *testing.T) {
 	if img.Empty() {
 		t.Fatalf("Image not loaded\n")
 	}
-	//this image should have results
+	// this image should have results
 	ids, _, _ := Detect(img)
 	if len(ids) == 0 {
 		t.Fatalf("No classes detected\n")
@@ -94,7 +94,7 @@ func TestModelNegative(t *testing.T) {
 	if img.Empty() {
 		t.Fatalf("Image not loaded\n")
 	}
-	//this image should have no results
+	// this image should have no results
 	ids, _, _ := Detect(img)
 	if len(ids) != 0 {
 		t.Fatalf("Classes detected\n")

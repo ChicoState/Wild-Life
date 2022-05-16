@@ -68,10 +68,16 @@ function updateStatus(up: UploadState) {
       if (!proto) return
       state.response.detections = proto as Detection[]
       state.context = true
-      let avgConf = proto.map((d: any) => d.confidence).reduce((a: any, b: any) => a + b, 0) / proto.length
+      let maxConf = 0
+      let confs = proto.map((d: any) => d.confidence)
+      for (let i = 0; i < confs.length; i++) {
+        if (maxConf < confs[i]) {
+          maxConf = confs[i]
+        }
+      }
       let count = [0, 0, 0]
-      state.response.detections.forEach((d:any) => {
-        switch(d.type) {
+      state.response.detections.forEach((d: any) => {
+        switch (d.type) {
           case "Poison Oak":
             count[0]++
             break
@@ -89,7 +95,7 @@ function updateStatus(up: UploadState) {
       cache.history.forEach((file: any) => {
         if (file.id == state.response.id) {
           file.result = ClassNames[count.indexOf(max)]
-          file.confidence = avgConf
+          file.confidence = maxConf
         }
       });
 
